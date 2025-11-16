@@ -1,0 +1,247 @@
+import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { searchSpotify } from "../utils/spotifyApi";
+
+export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [profileDropdown, setProfileDropdown] = useState(false);
+  const [settingsDropdown, setSettingsDropdown] = useState(false);
+  const searchRef = useRef(null);
+  const profileRef = useRef(null);
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileDropdown(false);
+      }
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setSettingsDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const data = await searchSpotify(searchQuery, 'track,artist,album');
+        const results = [];
+
+        // Add tracks (only those with preview URLs for local playback)
+        if (data.tracks?.items) {
+          const tracksWithPreview = data.tracks.items.filter(track => track.preview_url);
+          results.push(...tracksWithPreview.slice(0, 3).map(track => ({
+            id: track.id,
+            type: 'track',
+            title: track.name,
+            artist: track.artists[0]?.name,
+            album: track.album?.name,
+            cover: track.album?.images[0]?.url,
+            url: track.preview_url,
+            external_url: track.external_urls?.spotify
+          })));
+        }
+
+        // Add artists
+        if (data.artists?.items) {
+          results.push(...data.artists.items.slice(0, 2).map(artist => ({
+            id: artist.id,
+            type: 'artist',
+            title: artist.name,
+            cover: artist.images[0]?.url,
+            external_url: artist.external_urls?.spotify
+          })));
+        }
+
+        // Add albums
+        if (data.albums?.items) {
+          results.push(...data.albums.items.slice(0, 2).map(album => ({
+            id: album.id,
+            type: 'album',
+            title: album.name,
+            artist: album.artists[0]?.name,
+            cover: album.images[0]?.url,
+            external_url: album.external_urls?.spotify
+          })));
+        }
+
+        setSearchResults(results);
+        setShowResults(true);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(performSearch, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  const handleResultClick = (result) => {
+    setShowResults(false);
+    setSearchQuery("");
+    if (onSearchResult) {
+      onSearchResult(result);
+    }
+  };
+
+  return (
+    <header className="w-screen fixed top-0 left-0 z-50 bg-spotify-black/90 backdrop-blur-lg border-b border-spotify-light flex justify-between items-center px-6 py-4">
+      {/* Logo */}
+      <div className="flex items-center">
+        <Music className="w-8 h-8 text-spotify-green mr-2" />
+        <h1 className="text-spotify-white text-xl font-bold">CloudJamz</h1>
+      </div>
+
+      {/* Search */}
+      <div className="flex-1 max-w-2xl mx-6 relative" ref={searchRef}>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="What do you want to listen to?"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-12 py-3 rounded-full bg-spotify-white text-spotify-black placeholder-spotify-light focus:outline-none focus:ring-2 focus:ring-spotify-green"
+          />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-spotify-light" />
+          {loading && (
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-spotify-green border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
+
+        {/* Search Results Dropdown */}
+        {showResults && searchResults.length > 0 && (
+          <div className="absolute top-full mt-2 w-full bg-spotify-dark border border-spotify-light rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+            {searchResults.map((result) => (
+              <button
+                key={`${result.type}-${result.id}`}
+                onClick={() => handleResultClick(result)}
+                className="w-full px-4 py-3 text-left hover:bg-spotify-light/20 transition flex items-center gap-3"
+              >
+                {result.cover && (
+                  <img
+                    src={result.cover}
+                    alt={result.title}
+                    className="w-10 h-10 rounded object-cover"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-spotify-white font-medium truncate">{result.title}</div>
+                  <div className="text-spotify-lighter text-sm truncate">
+                    {result.type === 'track' && `${result.artist} • ${result.album}`}
+                    {result.type === 'artist' && 'Artist'}
+                    {result.type === 'album' && `${result.artist} • Album`}
+                  </div>
+                </div>
+                <div className="text-spotify-lighter text-xs capitalize">{result.type}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* User Actions */}
+      <div className="flex items-center gap-2">
+        {user ? (
+          <>
+            {/* Settings Icon */}
+            <div className="relative" ref={settingsRef}>
+              <button
+                onClick={() => setSettingsDropdown(!settingsDropdown)}
+                className="p-3 rounded-full bg-spotify-dark hover:bg-spotify-light transition"
+              >
+                <Settings className="w-6 h-6 text-spotify-lighter" />
+              </button>
+              {settingsDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg z-50">
+                  <button
+                    onClick={() => navigate('/settings')}
+                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                  >
+                    <Palette className="w-4 h-4" />
+                    Theme
+                  </button>
+                  <button
+                    onClick={() => navigate('/settings')}
+                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Notifications
+                  </button>
+                  <button
+                    onClick={() => navigate('/settings')}
+                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Privacy
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Icon */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setProfileDropdown(!profileDropdown)}
+                className="p-3 rounded-full bg-spotify-dark hover:bg-spotify-light transition"
+              >
+                <User className="w-6 h-6 text-spotify-lighter" />
+              </button>
+              {profileDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg z-50">
+                  <button
+                    onClick={() => navigate('/playlists')}
+                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                  >
+                    <ListMusic className="w-4 h-4" />
+                    My Playlists
+                  </button>
+                  <button
+                    onClick={() => navigate('/account-settings')}
+                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                  >
+                    <UserCog className="w-4 h-4" />
+                    Account Settings
+                  </button>
+                  <button
+                    onClick={onLogout}
+                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <button onClick={onLogin} className="px-3 py-1 bg-spotify-green hover:bg-spotify-green/80 transition text-spotify-black text-sm rounded">
+            Login
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}

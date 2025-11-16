@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-spotify-black text-spotify-white;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a202c; /* Dark track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5568; /* Subtle gray thumb */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096; /* Lighter on hover */
+}
+
+::-webkit-scrollbar-corner {
+  background: #1a202c;
+}
+
+/* Custom scrollbar for suggested-scroll */
+#suggested-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+#suggested-scroll::-webkit-scrollbar-track {
+  background: #1a202c;
+  border-radius: 4px;
+}
+
+#suggested-scroll::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+#suggested-scroll::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Custom scrollbar for playlists-scroll */
+#playlists-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+#playlists-scroll::-webkit-scrollbar-track {
+  background: #1a202c;
+  border-radius: 4px;
+}
+
+#playlists-scroll::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+#playlists-scroll::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
