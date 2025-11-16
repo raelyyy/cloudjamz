@@ -31,6 +31,7 @@ function AppContent() {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [shuffle, setShuffle] = useState(false);
   const [loop, setLoop] = useState('off');
   const [playlist, setPlaylist] = useState([]);
@@ -48,13 +49,14 @@ function AppContent() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setLoading(false); // stop loading after checking auth
       if (currentUser) {
-        navigate('/');
+        navigate('/'); // optional
       }
     });
     return () => unsubscribe();
   }, []);
-
+  
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -366,6 +368,10 @@ function AppContent() {
 
     loadFavorites();
   }, [user]);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>; // show loading spinner or blank
+  }
 
   if (!user) {
     return <Auth onLogin={() => navigate('/')} />;
