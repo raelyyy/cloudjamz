@@ -1,4 +1,10 @@
-# TODO: Add Logo and Subtext to Auth Page
+# TODO: Add Recently Played Section to Home Page
 
-- [x] Edit src/pages/Auth.jsx to add the logo (Music icon and "CloudJamz" text) at the top of the page, styled similarly to the Navbar.
-- [x] Add subtext below the logo/title, such as "Your music, your way" to provide a brief description.
+## Tasks
+- [x] Add recently played state and Firestore collection for tracking played songs
+- [x] Update playSong function in App.jsx to record played songs (avoid duplicates)
+- [x] Add Recently Played section to Home.jsx above My Music
+- [x] Change Recently Played display to rectangular cards (2x4 grid) instead of grid
+- [x] Make play/pause button triggers work properly
+- [ ] Test the recently played functionality
+ 

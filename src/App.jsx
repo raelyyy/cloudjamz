@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { collection, addDoc, query, where, getDocs, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { extractMetadata } from "./utils/metadataExtractor";
 import { getPlaceholderCover } from "./utils/placeholderCovers";
@@ -10,7 +10,7 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import PlayerBar from "./components/PlayerBar";
 import Home from "./pages/Home";
-import SearchPage from "./pages/SearchPage";
+
 import Login from "./pages/Login";
 import Auth from "./pages/Auth";
 import Playlists from "./pages/Playlists";
@@ -87,7 +87,7 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPlaying, currentSong]);
 
-  const playSong = (song, songList = []) => {
+  const playSong = async (song, songList = []) => {
     if (song.url) {
       setCurrentSong(song);
       setIsPlaying(true);
@@ -95,6 +95,38 @@ function AppContent() {
         setPlaylist(songList);
         setCurrentIndex(songList.findIndex(s => s.id === song.id));
       }
+
+      // Record recently played song (avoid duplicates)
+      if (user && song.id) {
+        try {
+          // Check if song already exists in recently played
+          const existingQuery = query(
+            collection(db, "recentlyPlayed"),
+            where("userId", "==", user.uid),
+            where("songId", "==", song.id)
+          );
+          const existingSnapshot = await getDocs(existingQuery);
+
+          if (!existingSnapshot.empty) {
+            // Update existing entry with new timestamp
+            const existingDoc = existingSnapshot.docs[0];
+            await updateDoc(existingDoc.ref, {
+              playedAt: new Date(),
+            });
+          } else {
+            // Add new entry
+            await addDoc(collection(db, "recentlyPlayed"), {
+              userId: user.uid,
+              songId: song.id,
+              songData: song,
+              playedAt: new Date(),
+            });
+          }
+        } catch (error) {
+          console.warn("Error recording recently played:", error);
+        }
+      }
+
       if (audioRef.current) {
         audioRef.current.src = song.url;
         audioRef.current.load(); // Load the audio first
@@ -416,6 +448,7 @@ function AppContent() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/account-settings" element={<AccountSettingsPage />} />
           <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+          <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
         </Routes>
       </div>
 

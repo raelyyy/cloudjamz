@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";  
 import { doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import { ChevronLeft } from "lucide-react"; // <-- import ChevronLeft
 
 export default function PlaylistView({ playlistId, user, onPlaySong }) {
   const [playlist, setPlaylist] = useState(null);
@@ -20,7 +21,6 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
         const playlistData = { id: playlistDoc.id, ...playlistDoc.data() };
         setPlaylist(playlistData);
 
-        // Fetch songs in the playlist
         const songPromises = playlistData.songs.map(songId =>
           getDoc(doc(db, "songs", songId))
         );
@@ -69,24 +69,16 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
 
   return (
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-      {/* Back button with chevron */}
+      {/* Back button with ChevronLeft */}
       <button
         onClick={() => window.history.back()}
         className="flex items-center mb-4 text-spotify-lighter hover:text-spotify-white transition"
       >
-        <svg
-          className="w-6 h-6 mr-2"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <div className="w-10 h-10 rounded-full bg-spotify-dark flex items-center justify-center mr-2 hover:bg-spotify-light/20 transition">
+          <ChevronLeft className="w-5 h-5" />
+        </div>
         Back
       </button>
-
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-spotify-white mb-2">{playlist.name}</h1>
         <p className="text-spotify-lighter">{songs.length} songs</p>

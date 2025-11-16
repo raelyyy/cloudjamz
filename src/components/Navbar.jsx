@@ -1,7 +1,7 @@
 import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { searchSpotify } from "../utils/spotifyApi";
+import { searchItunes } from "../utils/itunesApi";
 
 export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
   const navigate = useNavigate();
@@ -42,44 +42,21 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
 
       setLoading(true);
       try {
-        const data = await searchSpotify(searchQuery, 'track,artist,album');
+        const data = await searchItunes(searchQuery);
         const results = [];
 
-        // Add tracks (only those with preview URLs for local playback)
-        if (data.tracks?.items) {
-          const tracksWithPreview = data.tracks.items.filter(track => track.preview_url);
-          results.push(...tracksWithPreview.slice(0, 3).map(track => ({
+        // Add tracks (iTunes returns only tracks with preview URLs)
+        if (data && data.length > 0) {
+          results.push(...data.slice(0, 5).map(track => ({
             id: track.id,
             type: 'track',
-            title: track.name,
-            artist: track.artists[0]?.name,
-            album: track.album?.name,
-            cover: track.album?.images[0]?.url,
-            url: track.preview_url,
-            external_url: track.external_urls?.spotify
-          })));
-        }
-
-        // Add artists
-        if (data.artists?.items) {
-          results.push(...data.artists.items.slice(0, 2).map(artist => ({
-            id: artist.id,
-            type: 'artist',
-            title: artist.name,
-            cover: artist.images[0]?.url,
-            external_url: artist.external_urls?.spotify
-          })));
-        }
-
-        // Add albums
-        if (data.albums?.items) {
-          results.push(...data.albums.items.slice(0, 2).map(album => ({
-            id: album.id,
-            type: 'album',
-            title: album.name,
-            artist: album.artists[0]?.name,
-            cover: album.images[0]?.url,
-            external_url: album.external_urls?.spotify
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            cover: track.cover,
+            url: track.url,
+            external_url: track.external_url,
+            duration: track.duration
           })));
         }
 

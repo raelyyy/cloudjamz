@@ -4,10 +4,12 @@ import { collection, query, where, limit, orderBy, onSnapshot } from "firebase/f
 import { db } from "../firebase";
 import { getItunesRecommendations } from "../utils/itunesApi";
 import MusicCard from "../components/MusicCard";
+import RecentlyPlayedCard from "../components/RecentlyPlayedCard";
 
 export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying }) {
   const navigate = useNavigate();
   const [recentSongs, setRecentSongs] = useState([]);
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [myMusic, setMyMusic] = useState([]);
   const [spotifyRecommendations, setSpotifyRecommendations] = useState([]);
   const [suggestedPlaylists, setSuggestedPlaylists] = useState([]);
@@ -168,6 +170,26 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
     setLoading(true);
 
+    // Real-time listener for user's recently played songs
+    const recentlyPlayedQuery = query(
+      collection(db, "recentlyPlayed"),
+      where("userId", "==", user.uid),
+      orderBy("playedAt", "desc"),
+      limit(8)
+    );
+
+    const unsubscribeRecentlyPlayed = onSnapshot(recentlyPlayedQuery, (snapshot) => {
+      const recentlyPlayedSongs = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        recentlyPlayedSongs.push({ id: doc.id, ...data.songData });
+      });
+      setRecentlyPlayed(recentlyPlayedSongs);
+    }, (error) => {
+      console.warn("Firestore access denied for recently played, using empty list:", error.message);
+      setRecentlyPlayed([]);
+    });
+
     // Real-time listener for user's recent songs
     const recentQuery = query(
       collection(db, "songs"),
@@ -209,6 +231,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
     // Cleanup listeners on unmount
     return () => {
+      unsubscribeRecentlyPlayed();
       unsubscribeRecent();
       unsubscribeMyMusic();
     };
@@ -226,6 +249,22 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
         <div className="text-spotify-lighter">Loading...</div>
       ) : (
         <>
+          {user && recentlyPlayed.length > 0 && (
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-spotify-white mb-4">Recently Played</h2>
+              <div className="grid grid-cols-4 grid-rows-2 lg:grid-cols-2 lg:grid-rows-4 gap-3">
+                {recentlyPlayed.slice(0, 8).map((song) => (
+                  <RecentlyPlayedCard
+                    key={song.id}
+                    song={song}
+                    onPlay={() => onPlaySong(song, recentlyPlayed)}
+                    isPlaying={song.id === currentSong?.id && isPlaying}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {user && myMusic.length > 0 && (
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-spotify-white mb-4">My Music</h2>

@@ -114,9 +114,17 @@ export default function PlayerBar({
           <button onClick={onPrev} className="p-2 hover:text-spotify-white text-spotify-lighter transition">
             <SkipBack className="w-5 h-5" />
           </button>
-          <button onClick={onTogglePlayPause} className="p-3 bg-spotify-white hover:bg-spotify-lighter rounded-full transition">
-            {isPlaying ? <Pause className="w-6 h-6 text-spotify-black" /> : <Play className="w-6 h-6 text-spotify-black" />}
+          <button
+            onClick={onTogglePlayPause}
+            className="p-3 bg-spotify-white hover:bg-spotify-lighter rounded-full transition"
+          >
+            {isPlaying ? (
+              <Pause className="w-6 h-6 text-spotify-black" fill="currentColor" />
+            ) : (
+              <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
+            )}
           </button>
+
           <button onClick={onNext} className="p-2 hover:text-spotify-white text-spotify-lighter transition">
             <SkipForward className="w-5 h-5" />
           </button>
