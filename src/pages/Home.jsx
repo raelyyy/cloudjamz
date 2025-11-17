@@ -270,7 +270,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
               <h2 className="text-2xl font-bold text-spotify-white mb-4">My Music</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {myMusic.slice(0, 5).map((song) => (
-                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, myMusic)} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} />
+                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, myMusic)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} />
                 ))}
               </div>
             </section>
@@ -281,7 +281,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
               <h2 className="text-2xl font-bold text-spotify-white mb-4">Recently Added</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {recentSongs.map((song) => (
-                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} />
+                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} />
                 ))}
               </div>
             </section>
@@ -290,7 +290,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           <section className="mb-8 pt-4">
             <h2 className="text-2xl font-bold text-spotify-white mb-4">Suggested Music</h2>
             <div className="relative">
-              <div className="flex space-x-4 overflow-x-auto pb-4 scroll-smooth" id="suggested-scroll">
+              <div className="flex space-x-4 overflow-x-auto pb-4 pr-4 scroll-smooth" id="suggested-scroll">
                 {spotifyRecommendations.length > 0 ? (
                   spotifyRecommendations.slice(0, 20).map((track, index) => (
                     <div key={track.id} className={`flex-shrink-0 w-48 pt-2 ${index === 0 ? 'pl-2' : ''}`}>
@@ -303,6 +303,8 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                             console.log('No preview URL for track:', track.title);
                           }
                         }}
+                        onFavorite={user ? () => {} : undefined}
+                        onAddToPlaylist={user ? () => {} : undefined}
                         isPlaying={track.id === currentSong?.id && isPlaying}
                       />
                     </div>

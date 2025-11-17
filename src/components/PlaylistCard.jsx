@@ -21,7 +21,7 @@ export default function PlaylistCard({ playlist, onDelete, onClick }) {
   return (
     <div onClick={handleCardClick} className="bg-spotify-dark rounded-lg p-4 hover:bg-spotify-light/20 transition cursor-pointer group relative">
       <div className="relative mb-4">
-        <div className="w-full h-48 bg-gradient-to-br from-spotify-green to-spotify-black rounded-lg flex items-center justify-center">
+        <div className="w-full h-48 bg-gradient-to-br from-spotify-green to-spotify-black rounded-tl-lg rounded-tr-lg flex items-center justify-center">
           <Play className="w-12 h-12 text-spotify-white" />
         </div>
         <button

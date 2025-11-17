@@ -1,17 +1,30 @@
-  import { Play, Pause, MoreHorizontal, Heart, Plus, Share, Download, Trash2, Music, RotateCcw, X } from "lucide-react";
+import { Play, Pause, MoreHorizontal, Heart, Plus, Share, Download, Trash2, Music, RotateCcw, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, disableNavigation = false, className = '', isPlaying = false }) {
+export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, className = '', isPlaying = false }) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
 
-  const handleCardClick = (e) => {
-    if (disableNavigation) {
-      onPlay(song);
-    } else {
-      onPlay(song);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+
+  const handleCardClick = () => {
+    onPlay(song);
   };
 
   const handleArtistClick = (e) => {
@@ -77,32 +90,25 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
   return (
     <div onClick={handleCardClick} className={`bg-spotify-dark rounded-lg p-4 hover:bg-spotify-light/20 transition cursor-pointer group relative ${isPlaying ? 'ring-2 ring-spotify-green' : ''} ${className || ''}`}>
       <div className="relative mb-4">
-        {song.cover ? (
-          <>
-            <img
-              src={song.cover}
-              alt={song.title}
-              className="rounded-lg w-full h-48 object-cover shadow-lg"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div className="rounded-lg w-full h-48 bg-spotify-light/20 flex items-center justify-center shadow-lg hidden">
-              <Music className="w-24 h-24 text-spotify-lighter" />
-            </div>
-          </>
-        ) : (
-          <div className="rounded-lg w-full h-48 bg-spotify-light/20 flex items-center justify-center shadow-lg">
-            <Music className="w-24 h-24 text-spotify-lighter" />
-          </div>
-        )}
+        <img
+          src={song.cover || 'invalid'}
+          alt={song.title}
+          className="rounded-lg w-full h-48 object-cover shadow-lg"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+        />
+        <div className="rounded-lg w-full h-48 bg-spotify-light/20 flex items-center justify-center shadow-lg hidden">
+          <Music className="w-24 h-24 text-spotify-lighter" />
+        </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onPlay(song);
           }}
           className={`absolute bottom-2 right-2 p-3 bg-spotify-green rounded-full transition-opacity shadow-lg hover:bg-spotify-green/80 ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
             <Pause className="w-6 h-6 text-spotify-black" fill="currentColor" />
@@ -113,13 +119,14 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         <button
           onClick={handleMenuClick}
           className="absolute top-2 right-2 p-2 bg-spotify-dark/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-spotify-light/20"
+          aria-label="More options"
         >
           <MoreHorizontal className="w-4 h-4 text-spotify-white" />
         </button>
 
         {/* File Actions Menu */}
         {showMenu && (
-          <div className="absolute top-12 right-2 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg py-2 min-w-48 z-50">
+          <div ref={menuRef} className="absolute top-12 right-2 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg py-2 min-w-48 z-50">
             {onRestore && (
               <button
                 onClick={(e) => handleAction('restore', e)}

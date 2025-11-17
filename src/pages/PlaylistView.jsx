@@ -69,19 +69,22 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
 
   return (
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-      {/* Back button with ChevronLeft */}
-      <button
-        onClick={() => window.history.back()}
-        className="flex items-center mb-4 text-spotify-lighter hover:text-spotify-white transition"
-      >
-        <div className="w-10 h-10 rounded-full bg-spotify-dark flex items-center justify-center mr-2 hover:bg-spotify-light/20 transition">
-          <ChevronLeft className="w-5 h-5" />
+      {/* Header with gradient background and rounded top corners */}
+      <div className="bg-spotify-dark border border-spotify-light/20 rounded-tl-xl rounded-tr-xl p-6 mb-8">
+        {/* Back button with ChevronLeft */}
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center mb-4 text-spotify-lighter hover:text-spotify-white transition"
+        >
+          <div className="w-10 h-10 rounded-full bg-spotify-light/20 flex items-center justify-center mr-2 hover:bg-spotify-light/40 transition">
+            <ChevronLeft className="w-5 h-5" />
+          </div>
+          Back
+        </button>
+        <div>
+          <h1 className="text-3xl font-bold text-spotify-white mb-2">{playlist.name}</h1>
+          <p className="text-spotify-lighter">{songs.length} songs</p>
         </div>
-        Back
-      </button>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-spotify-white mb-2">{playlist.name}</h1>
-        <p className="text-spotify-lighter">{songs.length} songs</p>
       </div>
 
       {songs.length > 0 ? (

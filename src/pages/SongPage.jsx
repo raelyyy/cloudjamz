@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { getTrackDetails, getArtistDetails } from "../utils/spotifyApi";
-import { Play, Heart, Plus, Share, Download } from "lucide-react";
+import { Play, Heart, Plus, Share, Download, Music } from "lucide-react";
 
 export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) {
   const [song, setSong] = useState(null);
@@ -140,10 +140,17 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
       <div className="flex items-end gap-8 mb-8">
         <img
-          src={song.cover || spotifyData?.album?.images[0]?.url}
+          src={song.cover || spotifyData?.album?.images[0]?.url || 'invalid'}
           alt={song.title}
           className="w-64 h-64 rounded-lg shadow-lg object-cover"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
         />
+        <div className="w-64 h-64 rounded-lg bg-spotify-light/20 flex items-center justify-center shadow-lg hidden">
+          <Music className="w-32 h-32 text-spotify-lighter" />
+        </div>
         <div className="flex-1">
           <h1 className="text-6xl font-bold text-spotify-white mb-4">{song.title}</h1>
           <p className="text-2xl text-spotify-lighter mb-2">{song.artist}</p>

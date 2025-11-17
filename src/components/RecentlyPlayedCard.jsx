@@ -11,26 +11,18 @@ export default function RecentlyPlayedCard({ song, onPlay, isPlaying }) {
       className="flex items-center bg-spotify-dark hover:bg-spotify-light/10 rounded-lg p-3 transition cursor-pointer group"
     >
       {/* Cover or Placeholder */}
-      {song.cover ? (
-        <>
-          <img
-            src={song.cover}
-            alt={song.title}
-            className="w-12 h-12 rounded object-cover mr-3"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-          <div className="w-12 h-12 rounded bg-spotify-light/20 flex items-center justify-center mr-3 hidden">
-            <Music className="w-6 h-6 text-spotify-lighter" />
-          </div>
-        </>
-      ) : (
-        <div className="w-12 h-12 rounded bg-spotify-light/20 flex items-center justify-center mr-3">
-          <Music className="w-6 h-6 text-spotify-lighter" />
-        </div>
-      )}
+      <img
+        src={song.cover || 'invalid'}
+        alt={song.title}
+        className="w-12 h-12 rounded object-cover mr-3"
+        onError={(e) => {
+          e.target.style.display = 'none';
+          e.target.nextSibling.style.display = 'flex';
+        }}
+      />
+      <div className="w-12 h-12 rounded bg-spotify-light/20 flex items-center justify-center mr-3 hidden">
+        <Music className="w-6 h-6 text-spotify-lighter" />
+      </div>
 
       {/* Song Info */}
       <div className="flex-1 min-w-0">

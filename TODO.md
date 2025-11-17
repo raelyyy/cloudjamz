@@ -1,10 +1,18 @@
-# TODO: Add Recently Played Section to Home Page
+# TODO: Make songs update in realtime when liking songs
 
-## Tasks
-- [x] Add recently played state and Firestore collection for tracking played songs
-- [x] Update playSong function in App.jsx to record played songs (avoid duplicates)
-- [x] Add Recently Played section to Home.jsx above My Music
-- [x] Change Recently Played display to rectangular cards (2x4 grid) instead of grid
-- [x] Make play/pause button triggers work properly
-- [ ] Test the recently played functionality
- 
+## Task: Make the liked songs list update in real-time when liking or unliking songs from any page
+
+### Steps:
+- [ ] Move likedSongs state and logic from LikedSongs.jsx to App.jsx
+- [ ] Add useEffect in App.jsx to listen to favorites collection and build likedSongs array
+- [ ] Update toggleFavorite in App.jsx to immediately update likedSongs state for instant UI update
+- [ ] Pass likedSongs as prop to LikedSongs component
+- [ ] Update LikedSongs.jsx to use passed likedSongs prop instead of local state
+- [ ] Modify MusicCard.jsx to use isFavorite prop for correct menu text ("Add to Favorites" or "Remove from Favorites")
+- [ ] Update LikedSongs.jsx to pass isFavorite={true} to MusicCard since all songs are liked
+- [ ] Test liking/unliking songs from different pages and verify real-time updates
+
+### Notes:
+- Current implementation only updates when LikedSongs page is active; moving state to App.jsx ensures updates across the app
+- Immediate state update in toggleFavorite provides instant UI feedback
+- MusicCard menu text will now reflect favorite status

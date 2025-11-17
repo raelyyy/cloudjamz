@@ -2,31 +2,27 @@ import axios from 'axios';
 
 export const getItunesRecommendations = async () => {
   try {
-    console.log('Fetching iTunes recommendations from different genres...');
+    console.log('Fetching current hits from Pop, K-Pop, Hip-Hop, and Rock genres...');
 
-    // Define genres with their iTunes genre IDs
+    // Define specific genres with their iTunes genre IDs and search terms
     const genres = [
-      { name: 'Pop', id: 14 },
-      { name: 'Rock', id: 21 },
-      { name: 'Hip-Hop/Rap', id: 18 },
-      { name: 'Electronic', id: 7 },
-      { name: 'Country', id: 6 },
-      { name: 'R&B/Soul', id: 15 },
-      { name: 'Jazz', id: 11 },
-      { name: 'Classical', id: 5 }
+      { name: 'Pop', id: 14, searchTerms: ['pop hits 2024', 'current pop songs', 'top pop music'] },
+      { name: 'K-Pop', id: 51, searchTerms: ['kpop hits 2024', 'korean pop music', 'bts', 'blackpink', 'twice', 'stray kids'] },
+      { name: 'Hip-Hop/Rap', id: 18, searchTerms: ['hip hop hits 2024', 'rap music 2024', 'drake', 'kendrick lamar', 'travis scott'] },
+      { name: 'Rock', id: 21, searchTerms: ['rock hits 2024', 'current rock songs', 'alternative rock 2024'] }
     ];
 
     const allTracks = [];
 
-    // Fetch top songs from each genre
+    // Fetch top songs from each genre using RSS feeds
     for (const genre of genres) {
       try {
-        const response = await axios.get(`https://itunes.apple.com/us/rss/topsongs/limit=5/genre=${genre.id}/json`);
-        console.log(`iTunes response for ${genre.name}:`, response.data);
+        const response = await axios.get(`https://itunes.apple.com/us/rss/topsongs/limit=15/genre=${genre.id}/json`);
+        console.log(`iTunes RSS response for ${genre.name}:`, response.data);
 
         if (response.data.feed && response.data.feed.entry && response.data.feed.entry.length > 0) {
           const formattedTracks = response.data.feed.entry.map((entry, index) => ({
-            id: entry.id.attributes['im:id'] || `itunes-${genre.id}-${index}`,
+            id: entry.id.attributes['im:id'] || `genre-${genre.id}-${index}`,
             title: entry['im:name']?.label || 'Unknown Title',
             artist: entry['im:artist']?.label || 'Unknown Artist',
             album: entry['im:collection']?.['im:name']?.label || 'Unknown Album',
@@ -40,39 +36,80 @@ export const getItunesRecommendations = async () => {
           allTracks.push(...formattedTracks);
         }
       } catch (genreError) {
-        console.warn(`Error fetching ${genre.name} tracks:`, genreError.message);
+        console.warn(`Error fetching RSS for ${genre.name}:`, genreError.message);
       }
     }
 
-    // Shuffle the combined tracks to randomize order
-    const shuffledTracks = allTracks.sort(() => Math.random() - 0.5);
+    // Additional search for current hits in these genres
+    for (const genre of genres) {
+      for (const term of genre.searchTerms) {
+        try {
+          const searchResponse = await axios.get('https://itunes.apple.com/search', {
+            params: {
+              term: term,
+              media: 'music',
+              entity: 'song',
+              limit: 5,
+              country: 'us'
+            }
+          });
 
-    console.log('Formatted iTunes tracks from multiple genres:', shuffledTracks);
-    return shuffledTracks;
+          if (searchResponse.data.results && searchResponse.data.results.length > 0) {
+            const formattedTracks = searchResponse.data.results.map(track => ({
+              id: track.trackId?.toString() || `search-${genre.name}-${track.collectionId}`,
+              title: track.trackName || 'Unknown Title',
+              artist: track.artistName || 'Unknown Artist',
+              album: track.collectionName || 'Unknown Album',
+              cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
+              url: track.previewUrl || '',
+              external_url: track.trackViewUrl || '',
+              duration: Math.floor(track.trackTimeMillis / 1000) || 30,
+              genre: genre.name,
+            }));
+
+            allTracks.push(...formattedTracks);
+          }
+        } catch (termError) {
+          console.warn(`Error searching for "${term}":`, termError.message);
+        }
+      }
+    }
+
+    // Shuffle the combined tracks and remove duplicates
+    const shuffledTracks = allTracks.sort(() => Math.random() - 0.5);
+    const uniqueTracks = shuffledTracks.filter((track, index, self) =>
+      index === self.findIndex(t => t.id === track.id)
+    );
+
+    // Limit to 50 tracks to keep it manageable
+    const limitedTracks = uniqueTracks.slice(0, 50);
+
+    console.log('Formatted Pop/K-Pop/Hip-Hop/Rock tracks:', limitedTracks);
+    return limitedTracks;
 
   } catch (error) {
-    console.error('Error getting iTunes recommendations:', error);
+    console.error('Error getting genre recommendations:', error);
 
-    // Fallback to search API with multiple genres
+    // Fallback to basic genre searches
     try {
-      console.log('Trying iTunes search API as fallback...');
-      const genres = ['pop', 'rock', 'hip-hop', 'electronic', 'country', 'r&b', 'jazz', 'classical'];
+      console.log('Trying basic genre search as fallback...');
+      const fallbackGenres = ['pop', 'kpop', 'hip hop', 'rock'];
       const allTracks = [];
 
-      for (const genre of genres) {
+      for (const genre of fallbackGenres) {
         const searchResponse = await axios.get('https://itunes.apple.com/search', {
           params: {
             term: genre,
             media: 'music',
             entity: 'song',
-            limit: 5,
+            limit: 10,
             country: 'us'
           }
         });
 
         if (searchResponse.data.results && searchResponse.data.results.length > 0) {
           const formattedTracks = searchResponse.data.results.map(track => ({
-            id: track.trackId?.toString() || `search-${track.collectionId}`,
+            id: track.trackId?.toString() || `fallback-${genre}-${track.collectionId}`,
             title: track.trackName || 'Unknown Title',
             artist: track.artistName || 'Unknown Artist',
             album: track.collectionName || 'Unknown Album',
@@ -80,19 +117,23 @@ export const getItunesRecommendations = async () => {
             url: track.previewUrl || '',
             external_url: track.trackViewUrl || '',
             duration: Math.floor(track.trackTimeMillis / 1000) || 30,
-            genre: track.primaryGenreName || genre,
+            genre: genre.charAt(0).toUpperCase() + genre.slice(1),
           }));
 
           allTracks.push(...formattedTracks);
         }
       }
 
-      // Shuffle the combined tracks
+      // Shuffle and deduplicate
       const shuffledTracks = allTracks.sort(() => Math.random() - 0.5);
-      console.log('Formatted search tracks from multiple genres:', shuffledTracks);
-      return shuffledTracks;
+      const uniqueTracks = shuffledTracks.filter((track, index, self) =>
+        index === self.findIndex(t => t.id === track.id)
+      ).slice(0, 40);
+
+      console.log('Formatted fallback genre tracks:', uniqueTracks);
+      return uniqueTracks;
     } catch (searchError) {
-      console.error('Error with iTunes search fallback:', searchError);
+      console.error('Error with fallback search:', searchError);
     }
 
     return [];

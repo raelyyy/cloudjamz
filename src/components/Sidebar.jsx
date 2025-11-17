@@ -1,4 +1,4 @@
-import { Home, Search, Library, Plus, Heart, Upload, Image, Folder, Trash2 } from "lucide-react";
+import { Home, Library, Plus, Heart, Upload, Image, Folder, Trash2 } from "lucide-react";
 import { useRef } from "react";
 
 export default function Sidebar({ onNavigate, onUpload }) {
@@ -53,12 +53,6 @@ export default function Sidebar({ onNavigate, onUpload }) {
             </button>
           </li>
           <li>
-            <button onClick={() => onNavigate('/search')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
-              <Search className="w-6 h-6" />
-              Search
-            </button>
-          </li>
-          <li>
             <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
               <Library className="w-6 h-6" />
               Your Library
@@ -83,7 +77,7 @@ export default function Sidebar({ onNavigate, onUpload }) {
         </div>
         <ul className="space-y-2">
           <li>
-            <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+            <button onClick={() => onNavigate('/liked')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
               <Heart className="w-5 h-5 text-spotify-green" />
               Liked Songs
             </button>

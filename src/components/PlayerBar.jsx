@@ -1,5 +1,16 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, MoreHorizontal, Music } from "lucide-react";
-import { useState, useEffect } from "react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  Shuffle,
+  Repeat,
+  Heart,
+  MoreHorizontal,
+  Music
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function PlayerBar({
   currentSong,
@@ -20,7 +31,13 @@ export default function PlayerBar({
   onFavoriteToggle,
   isFavorite = false
 }) {
-  const [deviceVolume, setDeviceVolume] = useState(volume);
+  // 🔥 Track image errors
+  const [imgError, setImgError] = useState(false);
+
+  // Reset imgError whenever the song changes
+  useEffect(() => {
+    setImgError(false);
+  }, [currentSong?.cover]);
 
   useEffect(() => {
     if ('mediaSession' in navigator) {
@@ -33,7 +50,6 @@ export default function PlayerBar({
   }, [progress, duration]);
 
   useEffect(() => {
-    // Sync with device volume if available
     if ('mediaSession' in navigator && navigator.mediaSession.setActionHandler) {
       navigator.mediaSession.setActionHandler('play', onTogglePlayPause);
       navigator.mediaSession.setActionHandler('pause', onTogglePlayPause);
@@ -41,6 +57,34 @@ export default function PlayerBar({
       navigator.mediaSession.setActionHandler('previoustrack', onPrev);
     }
   }, [onTogglePlayPause, onNext, onPrev]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const newVolume = Math.min(1, volume + 0.1);
+          onVolumeChange(newVolume);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const newVolume = Math.max(0, volume - 0.1);
+          onVolumeChange(newVolume);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [volume, onVolumeChange]);
+
+  useEffect(() => {
+    const audio = document.querySelector('audio');
+    if (audio) {
+      const handleVolumeChange = () => onVolumeChange(audio.volume);
+      audio.addEventListener('volumechange', handleVolumeChange);
+      return () => audio.removeEventListener('volumechange', handleVolumeChange);
+    }
+  }, [onVolumeChange]);
 
   const handleProgressClick = (e) => {
     const rect = e.target.getBoundingClientRect();
@@ -51,11 +95,10 @@ export default function PlayerBar({
   };
 
   const handleVolumeClick = (e) => {
-    const rect = e.target.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const width = rect.width;
     const newVolume = clickX / width;
-    setDeviceVolume(newVolume);
     onVolumeChange(newVolume);
   };
 
@@ -72,24 +115,29 @@ export default function PlayerBar({
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {currentSong ? (
           <>
-            {currentSong.cover ? (
-              <img
-                src={currentSong.cover}
-                alt="Album cover"
-                className="w-14 h-14 rounded"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div className={`w-14 h-14 rounded bg-spotify-light/20 flex items-center justify-center ${currentSong.cover ? 'hidden' : ''}`}>
-              <Music className="w-8 h-8 text-spotify-lighter" />
+            {/* COVER IMAGE WITH PLACEHOLDER */}
+            <div className="relative w-14 h-14">
+              {!imgError && currentSong.cover ? (
+                <img
+                  src={currentSong.cover}
+                  alt="Album cover"
+                  className="w-14 h-14 rounded object-cover absolute inset-0"
+                  onError={() => setImgError(true)}
+                />
+              ) : null}
+
+              {(imgError || !currentSong.cover) && (
+                <div className="w-14 h-14 rounded bg-spotify-light/20 flex items-center justify-center absolute inset-0">
+                  <Music className="w-8 h-8 text-spotify-lighter" />
+                </div>
+              )}
             </div>
+
             <div className="min-w-0">
               <h4 className="text-spotify-white font-medium truncate">{currentSong.title}</h4>
               <p className="text-spotify-lighter text-sm truncate">{currentSong.artist}</p>
             </div>
+
             <button
               onClick={onFavoriteToggle}
               className={`p-1 transition ${isFavorite ? 'text-spotify-green' : 'hover:text-spotify-green text-spotify-lighter'}`}
@@ -124,17 +172,18 @@ export default function PlayerBar({
               <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
             )}
           </button>
-
           <button onClick={onNext} className="p-2 hover:text-spotify-white text-spotify-lighter transition">
             <SkipForward className="w-5 h-5" />
           </button>
           <button
             onClick={handleLoopClick}
-            className={`p-1 transition ${loop !== 'off' ? 'text-spotify-green' : 'hover:text-spotify-white text-spotify-lighter'}`}
+            className={`p-1 transition relative ${loop !== 'off' ? 'text-spotify-green' : 'hover:text-spotify-white text-spotify-lighter'}`}
           >
             <Repeat className="w-4 h-4" />
+            {loop === 'one' && <span className="absolute -top-1 -right-1 text-xs text-spotify-green font-bold">1</span>}
           </button>
         </div>
+
         <div className="flex items-center gap-2 w-full">
           <span className="text-xs text-spotify-lighter">{formatTime(progress)}</span>
           <div onClick={handleProgressClick} className="flex-1 bg-spotify-light rounded-full h-1 cursor-pointer">
@@ -156,7 +205,7 @@ export default function PlayerBar({
         <div onClick={handleVolumeClick} className="w-24 bg-spotify-light rounded-full h-1 cursor-pointer">
           <div
             className="bg-spotify-white h-1 rounded-full"
-            style={{ width: `${deviceVolume * 100}%` }}
+            style={{ width: `${volume * 100}%` }}
           ></div>
         </div>
       </div>

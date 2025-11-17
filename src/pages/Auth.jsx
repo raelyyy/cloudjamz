@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../firebase";
 import { Music } from "lucide-react";
 
@@ -7,6 +7,7 @@ export default function Auth({ onLogin }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
 
   const handleGoogleLogin = async () => {
@@ -28,7 +29,13 @@ export default function Auth({ onLogin }) {
     setError("");
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Set display name after account creation
+        if (displayName) {
+          await updateProfile(userCredential.user, {
+            displayName: displayName
+          });
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -60,6 +67,18 @@ export default function Auth({ onLogin }) {
         )}
 
         <form onSubmit={handleEmailAuth}>
+          {isSignUp && (
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Display Name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
+                required
+              />
+            </div>
+          )}
           <div className="mb-4">
             <input
               type="email"

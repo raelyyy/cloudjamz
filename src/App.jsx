@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { collection, addDoc, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, deleteDoc, updateDoc, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { Music } from "lucide-react";
 import { auth, db } from "./firebase";
 import { extractMetadata } from "./utils/metadataExtractor";
-import { getPlaceholderCover } from "./utils/placeholderCovers";
 import { uploadToCloudinary } from "./utils/cloudinary";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import PlayerBar from "./components/PlayerBar";
+import PlayingViewPanel from "./components/PlayingViewPanel";
 import Home from "./pages/Home";
 
 import Login from "./pages/Login";
@@ -22,9 +23,11 @@ import SettingsPage from "./pages/SettingsPage";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
 import TrashPage from "./pages/TrashPage";
 import PlaylistPage from "./pages/PlaylistPage";
+import LikedSongs from "./pages/LikedSongs";
 
 function AppContent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -35,8 +38,13 @@ function AppContent() {
   const [shuffle, setShuffle] = useState(false);
   const [loop, setLoop] = useState('off');
   const [playlist, setPlaylist] = useState([]);
+  const [originalPlaylist, setOriginalPlaylist] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [favorites, setFavorites] = useState(new Set());
+
+  const [playlists, setPlaylists] = useState([]);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [songToAdd, setSongToAdd] = useState(null);
 
   const audioRef = useRef(null);
 
@@ -46,13 +54,12 @@ function AppContent() {
     }
   }, [volume]);
 
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false); // stop loading after checking auth
-      if (currentUser) {
-        navigate('/'); // optional
-      }
     });
     return () => unsubscribe();
   }, []);
@@ -93,6 +100,7 @@ function AppContent() {
       setIsPlaying(true);
       if (songList.length > 0) {
         setPlaylist(songList);
+        setOriginalPlaylist([...songList]); // Store original order
         setCurrentIndex(songList.findIndex(s => s.id === song.id));
       }
 
@@ -171,21 +179,36 @@ function AppContent() {
 
 
 
+  const handleSongEnd = () => {
+    if (loop === 'one') {
+      // Repeat current song
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        setIsPlaying(true);
+        audioRef.current.play().catch(error => {
+          console.error("Error replaying song:", error);
+          setIsPlaying(false);
+        });
+      }
+    } else {
+      nextSong();
+    }
+  };
+
   const nextSong = () => {
     if (playlist.length > 0 && currentIndex >= 0) {
-      let nextIndex;
-      if (shuffle) {
-        nextIndex = Math.floor(Math.random() * playlist.length);
-      } else {
-        nextIndex = (currentIndex + 1) % playlist.length;
-      }
+      let nextIndex = (currentIndex + 1) % playlist.length;
 
       // Check if we've reached the end and loop is not 'all'
-      if (nextIndex === 0 && loop !== 'all' && !shuffle) {
+      if (nextIndex === 0 && loop !== 'all') {
         // End of playlist, stop playback
         setIsPlaying(false);
         setCurrentSong(null);
         setCurrentIndex(-1);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
         return;
       }
 
@@ -197,6 +220,10 @@ function AppContent() {
       setIsPlaying(false);
       setCurrentSong(null);
       setCurrentIndex(-1);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     }
   };
 
@@ -245,6 +272,22 @@ function AppContent() {
           // Upload file to Cloudinary
           const uploadResult = await uploadToCloudinary(file, `songs/${user.uid}`);
 
+          // Upload cover to Cloudinary if available
+          let coverUrl = null;
+          if (metadata.cover) {
+            try {
+              // Convert blob URL to File object for upload
+              const coverResponse = await fetch(metadata.cover);
+              const coverBlob = await coverResponse.blob();
+              const coverFile = new File([coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+              const coverUploadResult = await uploadToCloudinary(coverFile, `covers/${user.uid}`);
+              coverUrl = coverUploadResult.url;
+            } catch (error) {
+              console.warn('Failed to upload cover image:', error);
+              coverUrl = null;
+            }
+          }
+
           const newSong = {
             id: Date.now() + Math.random(),
             title: metadata.title,
@@ -253,7 +296,7 @@ function AppContent() {
             year: metadata.year,
             genre: metadata.genre,
             duration: metadata.duration,
-            cover: getPlaceholderCover(metadata.title, metadata.artist),
+            cover: coverUrl,
             url: uploadResult.url,
             userId: user.uid,
             cloudinaryPublicId: uploadResult.publicId,
@@ -331,7 +374,27 @@ function AppContent() {
   };
 
   const toggleShuffle = () => {
-    setShuffle(!shuffle);
+    const newShuffle = !shuffle;
+    setShuffle(newShuffle);
+
+    if (newShuffle && originalPlaylist.length > 0) {
+      // Shuffle the playlist
+      const shuffled = [...originalPlaylist].sort(() => Math.random() - 0.5);
+      setPlaylist(shuffled);
+      // Update current index to match the new position of current song
+      if (currentSong) {
+        const newIndex = shuffled.findIndex(s => s.id === currentSong.id);
+        setCurrentIndex(newIndex);
+      }
+    } else if (!newShuffle && originalPlaylist.length > 0) {
+      // Restore original order
+      setPlaylist([...originalPlaylist]);
+      // Update current index to match the original position
+      if (currentSong) {
+        const newIndex = originalPlaylist.findIndex(s => s.id === currentSong.id);
+        setCurrentIndex(newIndex);
+      }
+    }
   };
 
   const toggleLoop = (mode) => {
@@ -367,6 +430,7 @@ function AppContent() {
         await addDoc(collection(db, "favorites"), {
           userId: user.uid,
           songId: song.id,
+          songData: song, // Store song data for API songs
           addedAt: new Date(),
         });
       } catch (error) {
@@ -377,32 +441,85 @@ function AppContent() {
     setFavorites(newFavorites);
   };
 
-  // Load favorites on user login
+  // Load favorites on user login with real-time updates
   useEffect(() => {
-    const loadFavorites = async () => {
+    if (!user) {
+      setFavorites(new Set());
+      return;
+    }
+
+    const favQuery = query(collection(db, "favorites"), where("userId", "==", user.uid));
+    const unsubscribe = onSnapshot(favQuery, (querySnapshot) => {
+      const favSet = new Set();
+      querySnapshot.forEach((doc) => {
+        favSet.add(doc.data().songId);
+      });
+      setFavorites(favSet);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Load playlists on user login
+  useEffect(() => {
+    const loadPlaylists = async () => {
       if (!user) {
-        setFavorites(new Set());
+        setPlaylists([]);
         return;
       }
 
       try {
-        const favQuery = query(collection(db, "favorites"), where("userId", "==", user.uid));
-        const querySnapshot = await getDocs(favQuery);
-        const favSet = new Set();
+        const playlistsQuery = query(collection(db, "playlists"), where("userId", "==", user.uid));
+        const querySnapshot = await getDocs(playlistsQuery);
+        const userPlaylists = [];
         querySnapshot.forEach((doc) => {
-          favSet.add(doc.data().songId);
+          userPlaylists.push({ id: doc.id, ...doc.data() });
         });
-        setFavorites(favSet);
+        setPlaylists(userPlaylists);
       } catch (error) {
-        console.error("Error loading favorites:", error);
+        console.error("Error loading playlists:", error);
       }
     };
 
-    loadFavorites();
+    loadPlaylists();
   }, [user]);
 
+  const addToPlaylist = (song) => {
+    setSongToAdd(song);
+    setShowPlaylistModal(true);
+  };
+
+  const handleAddToPlaylist = async (playlistId) => {
+    if (!songToAdd || !user) return;
+
+    try {
+      const playlistRef = doc(db, "playlists", playlistId);
+      const playlistDoc = await getDoc(playlistRef);
+      if (playlistDoc.exists()) {
+        const playlistData = playlistDoc.data();
+        const updatedSongs = [...(playlistData.songs || []), songToAdd];
+        await updateDoc(playlistRef, { songs: updatedSongs });
+        // Update local state
+        setPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, songs: updatedSongs } : p));
+      }
+    } catch (error) {
+      console.error("Error adding song to playlist:", error);
+    } finally {
+      setShowPlaylistModal(false);
+      setSongToAdd(null);
+    }
+  };
+
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>; // show loading spinner or blank
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-spotify-black">
+        <div className="flex items-center mb-4">
+          <Music className="w-12 h-12 text-spotify-green mr-3" />
+          <h1 className="text-spotify-white text-3xl font-bold">CloudJamz</h1>
+        </div>
+        <div className="text-spotify-lighter">Loading...</div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -411,7 +528,7 @@ function AppContent() {
 
   return (
     <div className="flex flex-col h-screen bg-spotify-black">
-      <audio ref={audioRef} onEnded={nextSong} />
+      <audio ref={audioRef} onEnded={handleSongEnd} />
       <Navbar user={user} onLogin={handleLogin} onLogout={handleLogout} onSearchResult={(result) => {
         if (result.type === 'track' && result.url) {
           // Create a song object for local playback
@@ -436,20 +553,60 @@ function AppContent() {
       <div className="flex flex-1 overflow-hidden pt-16">
         <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} />
 
-        <Routes>
-          <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
-          <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
-          <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
-          <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-          <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-          <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-          <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-          <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/account-settings" element={<AccountSettingsPage />} />
-          <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-          <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
-        </Routes>
+        <div className="flex flex-1 overflow-hidden">
+          <Routes className="flex-1">
+            <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
+            <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
+            <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/account-settings" element={<AccountSettingsPage />} />
+            <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
+          </Routes>
+        </div>
+
+      {/* Only show PlayingViewPanel if not on settings or account-settings pages */}
+      {location.pathname !== '/settings' && location.pathname !== '/account-settings' && (
+        <PlayingViewPanel
+          currentSong={currentSong}
+          playlist={playlist}
+          currentIndex={currentIndex}
+          isPlaying={isPlaying}
+          onPlaySong={handlePlayFromCard}
+        />
+      )}
+
+      {/* Playlist Modal */}
+      {showPlaylistModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-spotify-dark p-6 rounded-lg w-96">
+            <h3 className="text-white text-lg font-semibold mb-4">Add to Playlist</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {playlists.map((playlist) => (
+                <button
+                  key={playlist.id}
+                  onClick={() => handleAddToPlaylist(playlist.id)}
+                  className="w-full text-left p-3 bg-spotify-light hover:bg-spotify-green/20 rounded text-white transition"
+                >
+                  {playlist.name}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowPlaylistModal(false)}
+              className="mt-4 px-4 py-2 bg-spotify-light text-white rounded hover:bg-spotify-green/20 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       </div>
 
       <PlayerBar
