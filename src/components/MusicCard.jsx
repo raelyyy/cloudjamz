@@ -96,13 +96,13 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         <img
           src={song.cover || 'invalid'}
           alt={song.title}
-          className="rounded-lg w-full h-48 object-cover shadow-lg"
+          className="rounded-lg w-full aspect-square object-cover shadow-lg"
           onError={(e) => {
             e.target.style.display = 'none';
             e.target.nextSibling.style.display = 'flex';
           }}
         />
-        <div className="rounded-lg w-full h-48 bg-spotify-light/20 flex items-center justify-center shadow-lg hidden">
+        <div className="rounded-lg w-full aspect-square bg-spotify-light/20 flex items-center justify-center shadow-lg hidden">
           <Music className="w-24 h-24 text-spotify-lighter" />
         </div>
         <button

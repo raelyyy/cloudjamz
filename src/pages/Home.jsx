@@ -240,8 +240,8 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   // Removed handlePlaySpotifyTrack as Spotify tracks will now play directly like uploaded music
 
   return (
-    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-      <h1 className="text-3xl font-bold text-spotify-white mb-8">
+    <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-spotify-black">
+      <h1 className="text-2xl md:text-3xl font-bold text-spotify-white mb-8">
         Good afternoon{user ? `, ${user.displayName}` : ''}
       </h1>
 
@@ -251,8 +251,8 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
         <>
           {user && recentlyPlayed.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-2xl font-bold text-spotify-white mb-4">Recently Played</h2>
-              <div className="grid grid-cols-4 grid-rows-2 lg:grid-cols-2 lg:grid-rows-4 gap-3">
+              <h2 className="text-xl md:text-2xl font-bold text-spotify-white mb-4">Recently Played</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 lg:grid-cols-2 lg:grid-rows-4 gap-3">
                 {recentlyPlayed.slice(0, 8).map((song) => (
                   <RecentlyPlayedCard
                     key={song.id}
@@ -267,7 +267,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
           {user && myMusic.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-2xl font-bold text-spotify-white mb-4">My Music</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-spotify-white mb-4">My Music</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {myMusic.slice(0, 5).map((song) => (
                   <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, myMusic)} onFavorite={onFavorite} onAddToPlaylist={onAddToPlaylist} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={favorites.has(song.id)} />
@@ -278,7 +278,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
           {recentSongs.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-2xl font-bold text-spotify-white mb-4">Recently Added</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-spotify-white mb-4">Recently Added</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {recentSongs.map((song) => (
                   <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={false} />

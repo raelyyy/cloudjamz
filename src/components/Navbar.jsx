@@ -1,9 +1,9 @@
-import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut } from "lucide-react";
+import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchItunes } from "../utils/itunesApi";
 
-export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
+export default function Navbar({ user, onLogin, onLogout, onSearchResult, onToggleMobileSidebar }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -83,24 +83,39 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
   };
 
   return (
-    <header className="w-screen fixed top-0 left-0 z-50 bg-spotify-black/90 backdrop-blur-lg border-b border-spotify-light flex justify-between items-center px-6 py-4">
+    <header className="w-screen fixed top-0 left-0 z-50 bg-spotify-black/90 backdrop-blur-lg border-b border-spotify-light flex justify-between items-center px-4 md:px-6 py-4">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={onToggleMobileSidebar}
+        className="md:hidden p-2 mr-2 text-spotify-lighter hover:text-spotify-white transition"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
       {/* Logo */}
       <div className="flex items-center">
         <Music className="w-8 h-8 text-spotify-green mr-2" />
-        <h1 className="text-spotify-white text-xl font-bold">CloudJamz</h1>
+        <h1 className="text-spotify-white text-xl font-bold hidden sm:block">CloudJamz</h1>
       </div>
 
       {/* Search */}
-      <div className="flex-1 max-w-2xl mx-6 relative" ref={searchRef}>
+      <div className="flex-1 max-w-2xl mx-2 md:mx-6 relative" ref={searchRef}>
         <div className="relative">
           <input
             type="text"
-            placeholder="What do you want to listen to?"
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-12 py-3 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green"
+            className="w-full px-12 py-3 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green hidden md:block"
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-spotify-light" />
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-10 py-2 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green md:hidden"
+          />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-spotify-light md:left-4 md:w-5 md:h-5 left-3 w-4 h-4" />
           {loading && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
               <div className="w-4 h-4 border-2 border-spotify-green border-t-transparent rounded-full animate-spin"></div>

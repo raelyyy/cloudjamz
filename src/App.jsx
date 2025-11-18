@@ -42,6 +42,8 @@ function AppContent() {
   const [originalPlaylist, setOriginalPlaylist] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [favorites, setFavorites] = useState(new Set());
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const [playlists, setPlaylists] = useState([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -69,6 +71,18 @@ function AppContent() {
       setLoading(false); // stop loading after checking auth
     });
     return () => unsubscribe();
+  }, []);
+
+  // Detect small screen
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
   
   useEffect(() => {
@@ -669,10 +683,10 @@ function AppContent() {
           // For artists and albums, open in Spotify
           window.open(result.external_url, '_blank');
         }
-      }} />
+      }} onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
 
       <div className="flex flex-1 overflow-hidden pt-16">
-        <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} />
+        <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} isMobileOpen={isMobileSidebarOpen} onToggleMobile={() => setIsMobileSidebarOpen(false)} />
 
         <div className="flex flex-1 overflow-hidden">
           <Routes className="flex-1">
@@ -693,8 +707,8 @@ function AppContent() {
           </Routes>
         </div>
 
-      {/* Only show PlayingViewPanel if not on settings or account-settings pages */}
-      {location.pathname !== '/settings' && location.pathname !== '/account-settings' && (
+      {/* Only show PlayingViewPanel if not on settings or account-settings pages and not on small screens */}
+      {location.pathname !== '/settings' && location.pathname !== '/account-settings' && !isSmallScreen && (
         <PlayingViewPanel
           currentSong={currentSong}
           playlist={playlist}
