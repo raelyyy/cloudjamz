@@ -109,13 +109,14 @@ export default function SearchPage({ onPlaySong, user }) {
 
   return (
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-      <div className="mb-8">
+      <div className="mb-8 relative">
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-spotify-black h-5 w-5" />
         <input
           type="text"
           placeholder="What do you want to listen to?"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-2xl px-4 py-3 rounded-full bg-spotify-white text-spotify-black placeholder-spotify-light focus:outline-none focus:ring-2 focus:ring-spotify-green"
+          className="w-full max-w-2xl pl-12 pr-4 py-3 rounded-full bg-spotify-white text-spotify-black placeholder-spotify-light focus:outline-none focus:ring-2 focus:ring-spotify-green"
         />
       </div>
 

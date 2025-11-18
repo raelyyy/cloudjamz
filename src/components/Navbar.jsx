@@ -100,7 +100,7 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-12 py-3 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green"
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-spotify-light" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-spotify-light" />
           {loading && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
               <div className="w-4 h-4 border-2 border-spotify-green border-t-transparent rounded-full animate-spin"></div>
