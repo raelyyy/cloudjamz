@@ -6,7 +6,7 @@ import { getItunesRecommendations } from "../utils/itunesApi";
 import MusicCard from "../components/MusicCard";
 import RecentlyPlayedCard from "../components/RecentlyPlayedCard";
 
-export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying }) {
+export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist }) {
   const navigate = useNavigate();
   const [recentSongs, setRecentSongs] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
@@ -270,7 +270,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
               <h2 className="text-2xl font-bold text-spotify-white mb-4">My Music</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {myMusic.slice(0, 5).map((song) => (
-                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, myMusic)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} />
+                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, myMusic)} onFavorite={onFavorite} onAddToPlaylist={onAddToPlaylist} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={favorites.has(song.id)} />
                 ))}
               </div>
             </section>
@@ -281,7 +281,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
               <h2 className="text-2xl font-bold text-spotify-white mb-4">Recently Added</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {recentSongs.map((song) => (
-                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} />
+                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={false} />
                 ))}
               </div>
             </section>
@@ -294,7 +294,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                 {spotifyRecommendations.length > 0 ? (
                   spotifyRecommendations.slice(0, 20).map((track, index) => (
                     <div key={track.id} className={`flex-shrink-0 w-48 pt-2 ${index === 0 ? 'pl-2' : ''}`}>
-                  <MusicCard
+                      <MusicCard
                         song={track}
                         onPlay={() => {
                           if (track.url) {
@@ -303,9 +303,10 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                             console.log('No preview URL for track:', track.title);
                           }
                         }}
-                        onFavorite={user ? () => {} : undefined}
-                        onAddToPlaylist={user ? () => {} : undefined}
+                        onFavorite={onFavorite}
+                        onAddToPlaylist={onAddToPlaylist}
                         isPlaying={track.id === currentSong?.id && isPlaying}
+                        isFavorite={favorites.has(track.id)}
                       />
                     </div>
                   ))
@@ -329,9 +330,9 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                         scrollContainer.scrollBy({ left: -400, behavior: 'smooth' });
                       }
                     }}
-                    className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute right-16 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
@@ -342,9 +343,9 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                         scrollContainer.scrollBy({ left: 400, behavior: 'smooth' });
                       }
                     }}
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
@@ -372,6 +373,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                       }}
                       onPlay={() => navigate(`/playlist/${playlist.id}`)}
                       disableNavigation={true}
+                      isFavorite={false}
                     />
                   </div>
                 ))}

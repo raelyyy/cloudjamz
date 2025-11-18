@@ -8,7 +8,8 @@ import {
   Repeat,
   Heart,
   MoreHorizontal,
-  Music
+  Music,
+  Plus
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -29,7 +30,8 @@ export default function PlayerBar({
   onShuffleToggle,
   onLoopToggle,
   onFavoriteToggle,
-  isFavorite = false
+  isFavorite = false,
+  onAddToPlaylist
 }) {
   // 🔥 Track image errors
   const [imgError, setImgError] = useState(false);
@@ -144,6 +146,15 @@ export default function PlayerBar({
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
+
+            {onAddToPlaylist && (
+              <button
+                onClick={() => onAddToPlaylist(currentSong)}
+                className="p-1 hover:text-spotify-green text-spotify-lighter transition"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
           </>
         ) : (
           <div className="text-spotify-lighter">No song selected</div>

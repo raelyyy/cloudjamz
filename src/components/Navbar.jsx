@@ -98,7 +98,7 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult }) {
             placeholder="What do you want to listen to?"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-12 py-3 rounded-full bg-spotify-white text-spotify-black placeholder-spotify-light focus:outline-none focus:ring-2 focus:ring-spotify-green"
+            className="w-full px-12 py-3 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green"
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-spotify-light" />
           {loading && (

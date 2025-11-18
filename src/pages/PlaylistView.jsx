@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";  
-import { doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
-import { ChevronLeft } from "lucide-react"; // <-- import ChevronLeft
+import { ChevronLeft } from "lucide-react";
 
 export default function PlaylistView({ playlistId, user, onPlaySong }) {
   const [playlist, setPlaylist] = useState(null);
@@ -11,36 +11,29 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
 
   useEffect(() => {
-    fetchPlaylist();
-  }, [playlistId]);
-
-  const fetchPlaylist = async () => {
-    try {
-      const playlistDoc = await getDoc(doc(db, "playlists", playlistId));
-      if (playlistDoc.exists()) {
-        const playlistData = { id: playlistDoc.id, ...playlistDoc.data() };
+    const playlistRef = doc(db, "playlists", playlistId);
+    const unsubscribe = onSnapshot(playlistRef, (doc) => {
+      if (doc.exists()) {
+        const playlistData = { id: doc.id, ...doc.data() };
         setPlaylist(playlistData);
-
-        const songPromises = playlistData.songs.map(songId =>
-          getDoc(doc(db, "songs", songId))
-        );
-        const songDocs = await Promise.all(songPromises);
-        const fetchedSongs = songDocs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSongs(fetchedSongs);
+        setSongs(playlistData.songs || []);
       }
-    } catch (error) {
-      console.error("Error fetching playlist:", error);
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (error) => {
+      console.error("Error fetching playlist:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [playlistId]);
 
   const removeSongFromPlaylist = async (songId) => {
     try {
+      const filteredSongs = songs.filter(song => song.id !== songId);
       await updateDoc(doc(db, "playlists", playlistId), {
-        songs: arrayRemove(songId),
+        songs: filteredSongs,
       });
-      setSongs(prev => prev.filter(song => song.id !== songId));
+      setSongs(filteredSongs);
     } catch (error) {
       console.error("Error removing song from playlist:", error);
     }
@@ -69,21 +62,49 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
 
   return (
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-      {/* Header with gradient background and rounded top corners */}
-      <div className="bg-spotify-dark border border-spotify-light/20 rounded-tl-xl rounded-tr-xl p-6 mb-8">
-        {/* Back button with ChevronLeft */}
+      {/* Spotify-like header with gradient background */}
+      <div className={`relative rounded-tl-xl rounded-tr-xl p-8 mb-8 ${
+        playlist.cover
+          ? 'bg-gradient-to-b from-spotify-dark/80 to-spotify-black'
+          : 'bg-gradient-to-b from-spotify-green to-spotify-black'
+      }`}>
+        {playlist.cover && (
+          <div className="absolute inset-0 bg-black/40 rounded-tl-xl rounded-tr-xl"></div>
+        )}
+        {/* Back button */}
         <button
           onClick={() => window.history.back()}
-          className="flex items-center mb-4 text-spotify-lighter hover:text-spotify-white transition"
+          className="flex items-center mb-6 text-spotify-lighter hover:text-spotify-white transition relative z-10"
         >
           <div className="w-10 h-10 rounded-full bg-spotify-light/20 flex items-center justify-center mr-2 hover:bg-spotify-light/40 transition">
             <ChevronLeft className="w-5 h-5" />
           </div>
           Back
         </button>
-        <div>
-          <h1 className="text-3xl font-bold text-spotify-white mb-2">{playlist.name}</h1>
-          <p className="text-spotify-lighter">{songs.length} songs</p>
+        <div className="flex items-end gap-6 relative z-10">
+          {playlist.cover ? (
+            <img
+              src={playlist.cover}
+              alt={playlist.name}
+              className="w-48 h-48 object-cover rounded-lg shadow-2xl"
+            />
+          ) : (
+            <div className="w-48 h-48 bg-gradient-to-br from-spotify-green to-spotify-black rounded-lg flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 bg-spotify-black/20 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-spotify-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl font-bold text-spotify-white">♪</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex-1">
+            <p className="text-spotify-lighter text-sm uppercase tracking-wider mb-2">Playlist</p>
+            <h1 className="text-6xl font-bold text-spotify-white mb-4">{playlist.name}</h1>
+            {playlist.description && (
+              <p className="text-spotify-lighter text-lg mb-4">{playlist.description}</p>
+            )}
+            <p className="text-spotify-lighter">{songs.length} songs</p>
+          </div>
         </div>
       </div>
 
@@ -91,7 +112,14 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {songs.map((song) => (
             <div key={song.id} className="relative group">
-              <MusicCard song={song} onPlay={() => handlePlaySong(song)} isPlaying={currentlyPlaying === song.id} />
+              <MusicCard
+                song={song}
+                isFavorite={false}
+                onPlay={() => handlePlaySong(song)}
+                isPlaying={currentlyPlaying === song.id}
+                showAddToPlaylist={false}
+                showLikeButton={false}
+              />
               {user && playlist.userId === user.uid && (
                 <button
                   onClick={() => removeSongFromPlaylist(song.id)}

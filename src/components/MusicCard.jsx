@@ -2,7 +2,7 @@ import { Play, Pause, MoreHorizontal, Heart, Plus, Share, Download, Trash2, Musi
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 
-export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, className = '', isPlaying = false }) {
+export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, onRemoveFromPlaylist, className = '', isPlaying = false, showAddToPlaylist = true, showLikeButton = true, isFavorite = false }) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -84,6 +84,9 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
       case 'permanentDelete':
         onPermanentDelete?.(song);
         break;
+      case 'removeFromPlaylist':
+        onRemoveFromPlaylist?.(song);
+        break;
     }
   };
 
@@ -145,20 +148,33 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
                 Delete Forever
               </button>
             )}
-            <button
-              onClick={(e) => handleAction('favorite', e)}
-              className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
-            >
-              <Heart className="w-4 h-4" />
-              Add to Favorites
-            </button>
-            <button
-              onClick={(e) => handleAction('addToPlaylist', e)}
-              className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
-            >
-              <Plus className="w-4 h-4" />
-              Add to Playlist
-            </button>
+            {showLikeButton && (
+              <button
+                onClick={(e) => handleAction('favorite', e)}
+                className={`w-full px-4 py-2 text-left hover:bg-spotify-light/20 transition flex items-center gap-3 ${isFavorite ? 'text-spotify-green' : 'text-spotify-white'}`}
+              >
+                <Heart className={`w-4 h-4 ${isFavorite ? 'fill-spotify-green text-spotify-green' : ''}`} />
+                {isFavorite ? 'Liked' : 'Add to Favorites'}
+              </button>
+            )}
+            {showAddToPlaylist && !onRemoveFromPlaylist && (
+              <button
+                onClick={(e) => handleAction('addToPlaylist', e)}
+                className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
+              >
+                <Plus className="w-4 h-4" />
+                Add to Playlist
+              </button>
+            )}
+            {onRemoveFromPlaylist && (
+              <button
+                onClick={(e) => handleAction('removeFromPlaylist', e)}
+                className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
+              >
+                <Trash2 className="w-4 h-4" />
+                Remove from Playlist
+              </button>
+            )}
             <button
               onClick={(e) => handleAction('share', e)}
               className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"

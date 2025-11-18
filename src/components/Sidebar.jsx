@@ -1,8 +1,10 @@
-import { Home, Library, Plus, Heart, Upload, Image, Folder, Trash2 } from "lucide-react";
-import { useRef } from "react";
+import { Home, Library, Plus, Heart, Upload, Image, Folder, Trash2, Music } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 
-export default function Sidebar({ onNavigate, onUpload }) {
-  const playlists = ["Liked Songs", "Discover Weekly", "Release Radar", "Daily Mix 1", "Daily Mix 2"];
+export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user }) {
+  const [userPlaylists, setUserPlaylists] = useState([]);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const folderInputRef = useRef(null);
@@ -12,6 +14,25 @@ export default function Sidebar({ onNavigate, onUpload }) {
       onUpload(e.target.files);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      const q = query(collection(db, "playlists"), where("userId", "==", user.uid));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const playlists = [];
+        querySnapshot.forEach((doc) => {
+          playlists.push({ id: doc.id, ...doc.data() });
+        });
+        setUserPlaylists(playlists);
+      });
+
+      return () => unsubscribe();
+    } else {
+      setUserPlaylists([]);
+    }
+  }, [user]);
+
+
 
   const handleUploadClick = (type) => {
     switch (type) {
@@ -70,7 +91,7 @@ export default function Sidebar({ onNavigate, onUpload }) {
       {/* Playlists */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-2 text-spotify-lighter hover:text-spotify-white transition">
+          <button onClick={onCreatePlaylist} className="flex items-center gap-2 text-spotify-lighter hover:text-spotify-white transition">
             <Plus className="w-5 h-5" />
             Create Playlist
           </button>
@@ -82,15 +103,23 @@ export default function Sidebar({ onNavigate, onUpload }) {
               Liked Songs
             </button>
           </li>
-          {playlists.slice(1).map((playlist, i) => (
-            <li key={i}>
-              <button onClick={() => onNavigate('/playlists')} className="block px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition truncate w-full text-left">
-                {playlist}
+          <li>
+            <button onClick={() => onNavigate('/my-music')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+              <Music className="w-5 h-5" />
+              My Music
+            </button>
+          </li>
+          {userPlaylists.slice(0, 5).map((playlist) => (
+            <li key={playlist.id}>
+              <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className="block px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition truncate w-full text-left">
+                {playlist.name}
               </button>
             </li>
           ))}
         </ul>
       </div>
+
+
 
       {/* Hidden file inputs */}
       <input

@@ -84,11 +84,12 @@ export default function LikedSongs({ user, onPlaySong, onFavorite, onAddToPlayli
           {likedSongs.map((song) => (
             <MusicCard
               key={song.id}
+              isFavorite={true}
               song={song}
               onPlay={() => onPlaySong(song, likedSongs)}
               onFavorite={onFavorite}
               onAddToPlaylist={onAddToPlaylist}
-              onDelete={() => {}}
+              onDelete={undefined}
               isPlaying={song.id === currentSong?.id && isPlaying}
             />
           ))}

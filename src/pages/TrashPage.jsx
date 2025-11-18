@@ -112,6 +112,7 @@ export default function TrashPage({ user, onPlaySong }) {
               <div key={song.documentId} className="relative">
                 <MusicCard
                   song={song}
+                  isFavorite={false}
                   onPlay={() => onPlaySong(song)}
                   onRestore={() => restoreSong(song)}
                   onPermanentDelete={() => permanentDeleteSong(song)}

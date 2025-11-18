@@ -24,6 +24,7 @@ import AccountSettingsPage from "./pages/AccountSettingsPage";
 import TrashPage from "./pages/TrashPage";
 import PlaylistPage from "./pages/PlaylistPage";
 import LikedSongs from "./pages/LikedSongs";
+import MyMusic from "./pages/MyMusic";
 
 function AppContent() {
   const navigate = useNavigate();
@@ -45,6 +46,12 @@ function AppContent() {
   const [playlists, setPlaylists] = useState([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [songToAdd, setSongToAdd] = useState(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
+  const [newPlaylistCover, setNewPlaylistCover] = useState(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const audioRef = useRef(null);
 
@@ -489,6 +496,93 @@ function AppContent() {
     setShowPlaylistModal(true);
   };
 
+  // Global function for playlist page to trigger add to playlist
+  window.handleAddToPlaylist = addToPlaylist;
+
+  const handleCoverUpload = async (file) => {
+    if (!file) return null;
+    setUploadingCover(true);
+    try {
+      const result = await uploadToCloudinary(file, `playlist-covers/${user.uid}`);
+      return result.url;
+    } catch (error) {
+      console.error("Error uploading cover:", error);
+      return null;
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const createPlaylist = async (e) => {
+    e.preventDefault();
+    if (!newPlaylistName.trim() || !user) return;
+
+    try {
+      // Check if playlist with same name already exists
+      const existingQuery = query(
+        collection(db, "playlists"),
+        where("userId", "==", user.uid),
+        where("name", "==", newPlaylistName.trim())
+      );
+      const existingSnapshot = await getDocs(existingQuery);
+
+      if (!existingSnapshot.empty) {
+        alert("A playlist with this name already exists. Please choose a different name.");
+        return;
+      }
+
+      // Generate a unique gradient color for this playlist
+      const gradients = [
+        'from-red-500',
+        'from-pink-500',
+        'from-purple-500',
+        'from-blue-500',
+        'from-yellow-500',
+        'from-gray-500',
+        'from-green-500',
+        'from-orange-500',
+        'from-indigo-500',
+        'from-teal-500',
+        'from-cyan-500',
+        'from-lime-500',
+        'from-emerald-500',
+        'from-violet-500',
+        'from-fuchsia-500',
+        'from-rose-500'
+      ];
+      const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+
+      let coverUrl = null;
+      if (newPlaylistCover) {
+        coverUrl = await handleCoverUpload(newPlaylistCover);
+      }
+
+      const playlistData = {
+        name: newPlaylistName.trim(),
+        description: newPlaylistDescription,
+        cover: coverUrl,
+        userId: user.uid,
+        songs: [],
+        gradientColor: randomGradient,
+        createdAt: new Date(),
+      };
+
+      const docRef = await addDoc(collection(db, "playlists"), playlistData);
+      const newPlaylist = {
+        id: docRef.id,
+        ...playlistData,
+      };
+
+      setPlaylists(prev => [...prev, newPlaylist]);
+      setNewPlaylistName("");
+      setNewPlaylistDescription("");
+      setNewPlaylistCover(null);
+      setShowCreatePlaylistModal(false);
+    } catch (error) {
+      console.error("Error creating playlist:", error);
+    }
+  };
+
   const handleAddToPlaylist = async (playlistId) => {
     if (!songToAdd || !user) return;
 
@@ -497,7 +591,15 @@ function AppContent() {
       const playlistDoc = await getDoc(playlistRef);
       if (playlistDoc.exists()) {
         const playlistData = playlistDoc.data();
-        const updatedSongs = [...(playlistData.songs || []), songToAdd];
+        const existingSongs = playlistData.songs || [];
+        // Check for duplicates
+        if (existingSongs.some(s => s.id === songToAdd.id)) {
+          console.log("Song already in playlist");
+          setShowPlaylistModal(false);
+          setSongToAdd(null);
+          return;
+        }
+        const updatedSongs = [...existingSongs, songToAdd];
         await updateDoc(playlistRef, { songs: updatedSongs });
         // Update local state
         setPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, songs: updatedSongs } : p));
@@ -510,14 +612,33 @@ function AppContent() {
     }
   };
 
+  const handleRemoveFromPlaylist = async (song, playlistId) => {
+    if (!user) return;
+
+    try {
+      const playlistRef = doc(db, "playlists", playlistId);
+      const playlistDoc = await getDoc(playlistRef);
+      if (playlistDoc.exists()) {
+        const playlistData = playlistDoc.data();
+        const updatedSongs = (playlistData.songs || []).filter(s => s.id !== song.id);
+        await updateDoc(playlistRef, { songs: updatedSongs });
+        // Update local state
+        setPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, songs: updatedSongs } : p));
+      }
+    } catch (error) {
+      console.error("Error removing song from playlist:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-spotify-black">
         <div className="flex items-center mb-4">
           <Music className="w-12 h-12 text-spotify-green mr-3" />
-          <h1 className="text-spotify-white text-3xl font-bold">CloudJamz</h1>
+          
         </div>
-        <div className="text-spotify-lighter">Loading...</div>
+        <h1 className="text-spotify-white text-3xl font-bold">CloudJamz</h1>
+        <div className="text-spotify-lighter text-3xl font-bold">•••</div>
       </div>
     );
   }
@@ -551,16 +672,17 @@ function AppContent() {
       }} />
 
       <div className="flex flex-1 overflow-hidden pt-16">
-        <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} />
+        <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} />
 
         <div className="flex flex-1 overflow-hidden">
           <Routes className="flex-1">
-            <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} />} />
             <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
             <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
-            <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} />} />
+            <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} />} />
             <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
             <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
             <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
             <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
@@ -586,24 +708,106 @@ function AppContent() {
       {showPlaylistModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-spotify-dark p-6 rounded-lg w-96">
-            <h3 className="text-white text-lg font-semibold mb-4">Add to Playlist</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">Select a Playlist</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {playlists.map((playlist) => (
                 <button
                   key={playlist.id}
-                  onClick={() => handleAddToPlaylist(playlist.id)}
-                  className="w-full text-left p-3 bg-spotify-light hover:bg-spotify-green/20 rounded text-white transition"
+                  onClick={() => setSelectedPlaylist(playlist)}
+                  className={`w-full text-left p-3 rounded text-white transition border-2 ${
+                    selectedPlaylist?.id === playlist.id
+                      ? 'border-spotify-green text-spotify-green bg-transparent'
+                      : 'border-gray-600 hover:border-spotify-green/50'
+                  }`}
                 >
                   {playlist.name}
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setShowPlaylistModal(false)}
-              className="mt-4 px-4 py-2 bg-spotify-light text-white rounded hover:bg-spotify-green/20 transition"
-            >
-              Cancel
-            </button>
+      <div className="flex gap-4 mt-4 justify-end">
+        <button
+          onClick={() => {
+            if (selectedPlaylist && songToAdd) {
+              handleAddToPlaylist(selectedPlaylist.id);
+            }
+            setShowPlaylistModal(false);
+            setSelectedPlaylist(null);
+          }}
+          disabled={!selectedPlaylist}
+          className="px-4 py-2 bg-spotify-green hover:bg-spotify-green/80 disabled:bg-spotify-green/50 disabled:cursor-not-allowed text-spotify-black rounded transition"
+        >
+          OK
+        </button>
+        <button
+          onClick={() => {
+            setShowPlaylistModal(false);
+            setSelectedPlaylist(null);
+          }}
+          className="px-4 py-2 bg-spotify-light text-white rounded hover:bg-spotify-green/20 transition"
+        >
+          Cancel
+        </button>
+      </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Playlist Modal */}
+      {showCreatePlaylistModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-spotify-dark p-6 rounded-lg w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-spotify-white mb-4">Create New Playlist</h2>
+            <form onSubmit={createPlaylist} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Playlist name"
+                  value={newPlaylistName}
+                  onChange={(e) => setNewPlaylistName(e.target.value)}
+                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
+                  required
+                />
+              </div>
+              <div>
+                <textarea
+                  placeholder="Description (optional)"
+                  value={newPlaylistDescription}
+                  onChange={(e) => setNewPlaylistDescription(e.target.value)}
+                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green resize-none"
+                  rows="3"
+                />
+              </div>
+              <div>
+                <label className="block text-spotify-lighter text-sm mb-2">Cover Image (optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setNewPlaylistCover(e.target.files[0])}
+                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-spotify-green transition"
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  disabled={uploadingCover}
+                  className="bg-spotify-green hover:bg-spotify-green/80 text-spotify-black px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploadingCover ? "Uploading..." : "Create Playlist"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreatePlaylistModal(false);
+                    setNewPlaylistName("");
+                    setNewPlaylistDescription("");
+                    setNewPlaylistCover(null);
+                  }}
+                  className="px-4 py-2 border border-spotify-light text-spotify-white rounded hover:border-spotify-white transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -627,6 +831,7 @@ function AppContent() {
         onLoopToggle={toggleLoop}
         onFavoriteToggle={() => currentSong && toggleFavorite(currentSong)}
         isFavorite={currentSong && favorites.has(currentSong.id)}
+        onAddToPlaylist={addToPlaylist}
       />
     </div>
   );
