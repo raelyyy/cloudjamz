@@ -42,6 +42,7 @@ export default function TrashPage({ user, onPlaySong }) {
       await addDoc(collection(db, "songs"), {
         ...song,
         restoredAt: new Date(),
+        isUploaded: true,
       });
 
       // Remove from trash
@@ -78,8 +79,8 @@ export default function TrashPage({ user, onPlaySong }) {
 
   if (!user) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-        <div className="text-spotify-lighter text-center">
+      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="text-spotify-lighter dark:text-light-lighter text-center">
           Please log in to view your trash.
         </div>
       </main>
@@ -87,9 +88,9 @@ export default function TrashPage({ user, onPlaySong }) {
   }
 
   return (
-    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
+    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-spotify-white">Trash</h1>
+        <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white">Trash</h1>
         {trashedSongs.length > 0 && (
           <button
             onClick={emptyTrash}
@@ -101,10 +102,10 @@ export default function TrashPage({ user, onPlaySong }) {
       </div>
 
       {loading ? (
-        <div className="text-spotify-lighter">Loading trash...</div>
+        <div className="text-spotify-lighter dark:text-light-lighter">Loading trash...</div>
       ) : trashedSongs.length > 0 ? (
         <>
-          <p className="text-spotify-lighter mb-6">
+          <p className="text-spotify-lighter dark:text-light-lighter mb-6">
             Songs in trash will be permanently deleted after 30 days.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -122,7 +123,7 @@ export default function TrashPage({ user, onPlaySong }) {
           </div>
         </>
       ) : (
-        <div className="text-spotify-lighter text-center">
+        <div className="text-spotify-lighter dark:text-light-lighter text-center">
           Your trash is empty.
         </div>
       )}

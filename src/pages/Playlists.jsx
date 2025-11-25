@@ -199,8 +199,8 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
 
   if (!user) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-        <div className="text-spotify-lighter text-center">
+      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="text-spotify-lighter dark:text-light-lighter text-center">
           Please log in to view your playlists.
         </div>
       </main>
@@ -208,9 +208,9 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
   }
 
   return (
-    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
+    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-spotify-white">Your Playlists</h1>
+        <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white">Your Playlists</h1>
         <button
           onClick={onCreatePlaylist}
           className="bg-spotify-green hover:bg-spotify-green/80 text-spotify-black px-4 py-2 rounded transition"
@@ -221,8 +221,8 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
 
       {(showCreateModal || showEditModal) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-spotify-dark p-6 rounded-lg w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold text-spotify-white mb-4">
+          <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-spotify-white dark:text-light-white mb-4">
               {showEditModal ? "Edit Playlist" : "Create New Playlist"}
             </h2>
             <form onSubmit={showEditModal ? editPlaylist : createPlaylist} className="space-y-4">
@@ -232,7 +232,7 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
                   placeholder="Playlist name"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
                   required
                 />
               </div>
@@ -241,19 +241,19 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
                   placeholder="Description (optional)"
                   value={newPlaylistDescription}
                   onChange={(e) => setNewPlaylistDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green resize-none"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green resize-none"
                   rows="3"
                 />
               </div>
               <div>
-                <label className="block text-spotify-lighter text-sm mb-2">Cover Image (optional)</label>
+                <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setNewPlaylistCover(e.target.files[0])}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 hover:file:bg-spotify-green/80"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 hover:file:bg-spotify-green/80"
                 />
-                {uploadingCover && <p className="text-spotify-lighter text-sm mt-1">Uploading cover...</p>}
+                {uploadingCover && <p className="text-spotify-lighter dark:text-light-lighter text-sm mt-1">Uploading cover...</p>}
               </div>
               <div className="flex justify-end gap-4 mt-4">
                 <button
@@ -273,7 +273,7 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
                     setNewPlaylistCover(null);
                     setEditingPlaylist(null);
                   }}
-                  className="px-4 py-2 border border-spotify-light text-spotify-white rounded hover:border-spotify-white transition"
+                  className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
                 >
                   Cancel
                 </button>
@@ -286,7 +286,7 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
       {/* My Music Section */}
       {songs.length > 0 && (
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-spotify-white mb-6">My Music</h2>
+          <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-6">My Music</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             <PlaylistCard
               playlist={{
@@ -310,9 +310,9 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
 
       {/* Playlists Section */}
       <div>
-        <h2 className="text-2xl font-bold text-spotify-white mb-6">Playlists</h2>
+        <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-6">Playlists</h2>
         {loading ? (
-          <div className="text-spotify-lighter">Loading playlists...</div>
+          <div className="text-spotify-lighter dark:text-light-lighter">Loading playlists...</div>
         ) : playlists.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {playlists.map((playlist) => (
@@ -327,7 +327,7 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
             ))}
           </div>
         ) : (
-          <div className="text-spotify-lighter text-center">
+          <div className="text-spotify-lighter dark:text-light-lighter text-center">
             You don't have any playlists yet. Create your first playlist!
           </div>
         )}

@@ -1,14 +1,10 @@
 import { Play, Pause, Music } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 export default function RecentlyPlayedCard({ song, onPlay, isPlaying }) {
-  const navigate = useNavigate();
-
   return (
     <div
       onClick={() => onPlay(song)}
-      className="flex items-center bg-spotify-dark hover:bg-spotify-light/10 rounded-lg p-3 transition cursor-pointer group"
+      className="flex items-center bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light/10 dark:hover:bg-light-light/10 rounded-lg p-3 transition cursor-pointer group shadow-md dark:shadow-lg"
     >
       {/* Cover or Placeholder */}
       <img
@@ -20,14 +16,14 @@ export default function RecentlyPlayedCard({ song, onPlay, isPlaying }) {
           e.target.nextSibling.style.display = 'flex';
         }}
       />
-      <div className="w-12 h-12 rounded bg-spotify-light/20 flex items-center justify-center mr-3 hidden">
-        <Music className="w-6 h-6 text-spotify-lighter" />
+      <div className="w-12 h-12 rounded bg-spotify-light/20 dark:bg-light-light/20 flex items-center justify-center mr-3 hidden">
+        <Music className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
       </div>
 
       {/* Song Info */}
       <div className="flex-1 min-w-0">
-        <h4 className="text-spotify-white font-medium text-sm truncate">{song.title}</h4>
-        <p className="text-spotify-lighter text-xs truncate">{song.artist}</p>
+        <h4 className="text-spotify-white dark:text-light-white font-medium text-sm truncate">{song.title}</h4>
+        <p className="text-spotify-lighter dark:text-light-lighter text-xs truncate">{song.artist}</p>
       </div>
 
       {/* Play/Pause Button (hover only) */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, limit, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, limit, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { getItunesRecommendations } from "../utils/itunesApi";
 import MusicCard from "../components/MusicCard";
@@ -8,12 +8,19 @@ import RecentlyPlayedCard from "../components/RecentlyPlayedCard";
 
 export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist }) {
   const navigate = useNavigate();
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
   const [recentSongs, setRecentSongs] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [myMusic, setMyMusic] = useState([]);
   const [spotifyRecommendations, setSpotifyRecommendations] = useState([]);
   const [suggestedPlaylists, setSuggestedPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     // Fetch Spotify recommendations on mount
@@ -201,7 +208,12 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     const unsubscribeRecent = onSnapshot(recentQuery, (snapshot) => {
       const recent = [];
       snapshot.forEach((doc) => {
-        recent.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        recent.push({
+          ...data,
+          id: data.id ?? doc.id,
+          docId: doc.id,
+        });
       });
       setRecentSongs(recent);
     }, (error) => {
@@ -219,7 +231,12 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     const unsubscribeMyMusic = onSnapshot(myMusicQuery, (snapshot) => {
       const mySongs = [];
       snapshot.forEach((doc) => {
-        mySongs.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        mySongs.push({
+          ...data,
+          id: data.id ?? doc.id,
+          docId: doc.id,
+        });
       });
       setMyMusic(mySongs);
       setLoading(false);
@@ -237,21 +254,66 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     };
   }, [user]);
 
+  const handleEditMySong = async (updatedSong) => {
+    if (!updatedSong) return;
+    const documentId = updatedSong.docId || updatedSong.id;
+    if (!documentId) {
+      console.error("Missing song document id for update");
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+      const songRef = doc(db, "songs", documentId);
+      await updateDoc(songRef, {
+        title: updatedSong.title,
+        artist: updatedSong.artist,
+        cover: updatedSong.cover,
+        album: updatedSong.album || '',
+      });
+
+      const applyUpdate = (list) =>
+        list.map((song) => {
+          const songDocId = song.docId || song.id;
+          if (songDocId === documentId) {
+            return {
+              ...song,
+              title: updatedSong.title,
+              artist: updatedSong.artist,
+              cover: updatedSong.cover,
+              album: updatedSong.album || '',
+            };
+          }
+          return song;
+        });
+
+      setMyMusic((prev) => applyUpdate(prev));
+      setRecentSongs((prev) => applyUpdate(prev));
+    } catch (error) {
+      console.error("Failed to update song:", error);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Removed handlePlaySpotifyTrack as Spotify tracks will now play directly like uploaded music
 
   return (
-    <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-spotify-black">
-      <h1 className="text-2xl md:text-3xl font-bold text-spotify-white mb-8">
-        Good afternoon{user ? `, ${user.displayName}` : ''}
-      </h1>
+    <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+      <section className="hero bg-gradient-to-r from-green-400 to-transparent p-8 rounded-lg mb-8">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-spotify-white dark:text-light-white mb-4">
+          {getGreeting()}{user ? `, ${user.displayName}` : ''}
+        </h1>
+        <p className="text-spotify-white dark:text-light-lighter text-base md:text-lg">Discover your favorite music</p>
+      </section>
 
       {loading ? (
-        <div className="text-spotify-lighter">Loading...</div>
+        <div className="text-spotify-lighter dark:text-light-lighter">Loading...</div>
       ) : (
         <>
           {user && recentlyPlayed.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-xl md:text-2xl font-bold text-spotify-white mb-4">Recently Played</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Recently Played</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 lg:grid-cols-2 lg:grid-rows-4 gap-3">
                 {recentlyPlayed.slice(0, 8).map((song) => (
                   <RecentlyPlayedCard
@@ -267,18 +329,36 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
           {user && myMusic.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-xl md:text-2xl font-bold text-spotify-white mb-4">My Music</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {myMusic.slice(0, 5).map((song) => (
-                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, myMusic)} onFavorite={onFavorite} onAddToPlaylist={onAddToPlaylist} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={favorites.has(song.id)} />
-                ))}
+              <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">My Music</h2>
+              <div id="my-music-scroll" className="overflow-x-auto overflow-y-visible pb-4 -mx-2">
+                <div className="flex gap-4 px-2 scroll-smooth snap-x snap-mandatory">
+                  {myMusic.map((song) => (
+                    <div key={song.docId || song.id} className="flex-shrink-0 w-44 sm:w-48 snap-start">
+                      <MusicCard
+                        className="w-full"
+                        song={song}
+                        onPlay={() => onPlaySong(song, myMusic)}
+                        onFavorite={onFavorite}
+                        onAddToPlaylist={onAddToPlaylist}
+                        onDelete={onDelete}
+                        onEdit={(updatedSong) => {
+                          if (!editLoading) {
+                            handleEditMySong(updatedSong);
+                          }
+                        }}
+                        isPlaying={song.id === currentSong?.id && isPlaying}
+                        isFavorite={favorites.has(song.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           )}
 
           {recentSongs.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-xl md:text-2xl font-bold text-spotify-white mb-4">Recently Added</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Recently Added</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {recentSongs.map((song) => (
                   <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={false} />
@@ -288,7 +368,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           )}
 
           <section className="mb-8 pt-4">
-            <h2 className="text-2xl font-bold text-spotify-white mb-4">Suggested Music</h2>
+            <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Suggested Music</h2>
             <div className="relative">
               <div className="flex space-x-4 overflow-x-auto pb-4 pr-4 scroll-smooth" id="suggested-scroll">
                 {spotifyRecommendations.length > 0 ? (
@@ -313,10 +393,10 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                 ) : (
                   // Placeholder cards
                   Array.from({ length: 6 }, (_, i) => (
-                    <div key={i} className="flex-shrink-0 w-48 bg-spotify-dark rounded-lg p-4 hover:bg-spotify-light/20 transition">
-                      <div className="w-full h-48 bg-spotify-light rounded-lg mb-4"></div>
-                      <h3 className="text-spotify-white font-semibold">Suggested Song {i + 1}</h3>
-                      <p className="text-spotify-lighter text-sm">Discover new music</p>
+                    <div key={i} className="flex-shrink-0 w-48 bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition">
+                      <div className="w-full h-48 bg-spotify-light dark:bg-light-light rounded-lg mb-4"></div>
+                      <h3 className="text-spotify-white dark:text-light-white font-semibold">Suggested Song {i + 1}</h3>
+                      <p className="text-spotify-lighter dark:text-light-lighter text-sm">Discover new music</p>
                     </div>
                   ))
                 )}
@@ -355,7 +435,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-spotify-white mb-4">Suggested Playlists</h2>
+            <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Suggested Playlists</h2>
             <div className="relative">
               <div className="flex space-x-4 overflow-x-auto pb-4 scroll-smooth" id="playlists-scroll">
                 {suggestedPlaylists.map((playlist) => (

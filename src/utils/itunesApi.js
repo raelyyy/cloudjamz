@@ -171,3 +171,35 @@ export const searchItunes = async (query) => {
     return [];
   }
 };
+
+export const getItunesTrackById = async (trackId) => {
+  try {
+    const response = await axios.get('https://itunes.apple.com/lookup', {
+      params: {
+        id: trackId,
+        media: 'music',
+        entity: 'song',
+        country: 'us'
+      }
+    });
+
+    if (response.data.results && response.data.results.length > 0) {
+      const track = response.data.results[0];
+      return {
+        id: track.trackId?.toString() || `lookup-${track.collectionId}`,
+        title: track.trackName || 'Unknown Title',
+        artist: track.artistName || 'Unknown Artist',
+        album: track.collectionName || 'Unknown Album',
+        cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
+        url: track.previewUrl || '',
+        external_url: track.trackViewUrl || '',
+        duration: Math.floor(track.trackTimeMillis / 1000) || 30,
+        genre: track.primaryGenreName || 'Unknown Genre',
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error looking up iTunes track:', error);
+    return null;
+  }
+};

@@ -29,17 +29,17 @@ export default function AlbumPage({ albumName, onPlaySong }) {
 
   if (loading) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-        <div className="text-spotify-lighter">Loading album...</div>
+      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="text-spotify-lighter dark:text-light-lighter">Loading album...</div>
       </main>
     );
   }
 
   return (
-    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
+    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-spotify-white mb-2">{albumName}</h1>
-        <p className="text-spotify-lighter">{songs.length} songs</p>
+        <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white mb-2">{albumName}</h1>
+        <p className="text-spotify-lighter dark:text-light-lighter">{songs.length} songs</p>
       </div>
 
       {songs.length > 0 ? (
@@ -49,7 +49,7 @@ export default function AlbumPage({ albumName, onPlaySong }) {
           ))}
         </div>
       ) : (
-        <div className="text-spotify-lighter text-center">
+        <div className="text-spotify-lighter dark:text-light-lighter text-center">
           No songs found for this album.
         </div>
       )}

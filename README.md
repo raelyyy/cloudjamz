@@ -16,3 +16,13 @@ The React Compiler is not enabled on this template because of its impact on dev 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 
 Deploy trigger
+
+## Two-Factor Authentication
+
+CloudJamz now supports Firebase phone-based 2FA. Enable it from `Settings → Account Settings → Two-Factor Authentication`:
+
+1. Enter your phone number in E.164 format (`+15555555555`) and send the verification code.
+2. Type the 6-digit SMS code to finish enrollment.
+3. On future sign-ins, complete the second step using the code we send to that phone.
+
+Make sure phone sign-in and multi-factor auth are enabled in your Firebase project.

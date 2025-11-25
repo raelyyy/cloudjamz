@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
-import { User, Mail, Lock, ArrowLeft, Save } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { User, Lock, ArrowLeft, Save, ShieldCheck, ShieldOff, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
-import { updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+import {
+  EmailAuthProvider,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  RecaptchaVerifier,
+  multiFactor,
+  reauthenticateWithCredential,
+  updateEmail,
+  updatePassword,
+  updateProfile
+} from "firebase/auth";
 
 export default function AccountSettingsPage() {
   const navigate = useNavigate();
@@ -13,13 +23,38 @@ export default function AccountSettingsPage() {
     newPassword: '',
     confirmPassword: ''
   });
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [mfaFactors, setMfaFactors] = useState([]);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneLabel, setPhoneLabel] = useState('Personal phone');
+  const [smsCode, setSmsCode] = useState('');
+  const [verificationId, setVerificationId] = useState('');
+  const [mfaMessage, setMfaMessage] = useState('');
+  const [mfaError, setMfaError] = useState('');
+  const [mfaProcessing, setMfaProcessing] = useState(false);
+  const [disablingUid, setDisablingUid] = useState('');
+  const mfaRecaptchaRef = useRef(null);
 
-  // Load user data on component mount
+  const refreshMfaFactors = async (currentUser = auth.currentUser) => {
+    if (!currentUser) return;
+    await currentUser.reload();
+    const factors = multiFactor(currentUser).enrolledFactors || [];
+    setMfaFactors(factors);
+  };
+
+  const ensureRecaptcha = async () => {
+    if (!mfaRecaptchaRef.current) {
+      mfaRecaptchaRef.current = new RecaptchaVerifier(auth, "settings-mfa-recaptcha", {
+        size: "invisible"
+      });
+      await mfaRecaptchaRef.current.render();
+    }
+    return mfaRecaptchaRef.current;
+  };
+
   useEffect(() => {
-    const loadUserData = () => {
+    const loadUserData = async () => {
       const user = auth.currentUser;
       if (user) {
         setFormData(prev => ({
@@ -27,11 +62,20 @@ export default function AccountSettingsPage() {
           displayName: user.displayName || '',
           email: user.email || ''
         }));
+        await refreshMfaFactors(user);
       }
-      setLoading(false);
     };
 
     loadUserData();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (mfaRecaptchaRef.current) {
+        mfaRecaptchaRef.current.clear();
+        mfaRecaptchaRef.current = null;
+      }
+    };
   }, []);
 
   const handleInputChange = (field, value) => {
@@ -39,6 +83,99 @@ export default function AccountSettingsPage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const sendEnrollmentCode = async () => {
+    setMfaProcessing(true);
+    setMfaError('');
+    setMfaMessage('');
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      if (!phoneNumber) {
+        throw new Error('Enter a phone number to continue');
+      }
+      if (!phoneNumber.startsWith('+')) {
+        throw new Error('Use international format (e.g. +15555555555)');
+      }
+      const session = await multiFactor(user).getSession();
+      const phoneAuthProvider = new PhoneAuthProvider(auth);
+      const appVerifier = await ensureRecaptcha();
+      const verificationIdResult = await phoneAuthProvider.verifyPhoneNumber(
+        { phoneNumber, session },
+        appVerifier
+      );
+      setVerificationId(verificationIdResult);
+      setSmsCode('');
+      setMfaMessage(`Verification code sent to ${phoneNumber}.`);
+    } catch (error) {
+      setMfaError(error.message);
+      if (mfaRecaptchaRef.current) {
+        mfaRecaptchaRef.current.clear();
+        mfaRecaptchaRef.current = null;
+      }
+    } finally {
+      setMfaProcessing(false);
+    }
+  };
+
+  const completeEnrollment = async () => {
+    if (!verificationId || smsCode.length < 6) {
+      setMfaError('Enter the 6-digit code from your SMS.');
+      return;
+    }
+    setMfaProcessing(true);
+    setMfaError('');
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      const phoneCredential = PhoneAuthProvider.credential(verificationId, smsCode);
+      const assertion = PhoneMultiFactorGenerator.assertion(phoneCredential);
+      await multiFactor(user).enroll(assertion, phoneLabel.trim() || 'Trusted phone');
+      setMfaMessage('Two-factor authentication enabled.');
+      setVerificationId('');
+      setSmsCode('');
+      setPhoneNumber('');
+      await refreshMfaFactors(user);
+    } catch (error) {
+      setMfaError(error.message);
+    } finally {
+      setMfaProcessing(false);
+    }
+  };
+
+  const cancelEnrollment = () => {
+    setVerificationId('');
+    setSmsCode('');
+    setMfaMessage('');
+    setMfaError('');
+    if (mfaRecaptchaRef.current) {
+      mfaRecaptchaRef.current.clear();
+      mfaRecaptchaRef.current = null;
+    }
+  };
+
+  const disableFactor = async (factorUid) => {
+    setDisablingUid(factorUid);
+    setMfaError('');
+    setMfaMessage('');
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      await multiFactor(user).unenroll(factorUid);
+      await refreshMfaFactors(user);
+      setMfaMessage('Two-factor authentication disabled.');
+    } catch (error) {
+      setMfaError(error.message);
+    } finally {
+      setDisablingUid('');
+    }
   };
 
   const handleSave = async () => {
@@ -92,13 +229,13 @@ export default function AccountSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-spotify-black text-spotify-white p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen max-h-screen overflow-y-auto bg-spotify-black dark:bg-light-black text-spotify-white dark:text-light-white p-4 md:p-6">
+      <div className="max-w-7xl mx-auto pb-36">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-spotify-light/20 rounded-full transition"
+            className="p-2 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 rounded-full transition"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -106,7 +243,7 @@ export default function AccountSettingsPage() {
         </div>
 
         {/* Account Settings Form */}
-        <div className="bg-spotify-dark rounded-lg p-6 w-full">
+        <div className="bg-spotify-dark dark:bg-light-dark rounded-lg p-6 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Profile Information */}
             <div className="space-y-6">
@@ -117,22 +254,22 @@ export default function AccountSettingsPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Display Name</label>
+                    <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Display Name</label>
                     <input
                       type="text"
                       value={formData.displayName}
                       onChange={(e) => handleInputChange('displayName', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black border border-spotify-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
                       placeholder="Enter your display name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email Address</label>
+                    <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Email Address</label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black border border-spotify-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -149,32 +286,32 @@ export default function AccountSettingsPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Current Password</label>
+                    <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Current Password</label>
                     <input
                       type="password"
                       value={formData.currentPassword}
                       onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black border border-spotify-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
                       placeholder="Enter current password"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">New Password</label>
+                    <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">New Password</label>
                     <input
                       type="password"
                       value={formData.newPassword}
                       onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black border border-spotify-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
                       placeholder="Enter new password"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Confirm New Password</label>
+                    <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Confirm New Password</label>
                     <input
                       type="password"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black border border-spotify-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
                       placeholder="Confirm new password"
                     />
                   </div>
@@ -202,6 +339,117 @@ export default function AccountSettingsPage() {
             </button>
           </div>
         </div>
+
+        <div className="bg-spotify-dark dark:bg-light-dark rounded-lg p-6 w-full mt-8">
+          <div className="flex items-center gap-3 mb-4">
+            <ShieldCheck className="w-6 h-6 text-spotify-green" />
+            <h2 className="text-2xl font-semibold text-spotify-white dark:text-light-white">Two-Factor Authentication</h2>
+          </div>
+          <p className="text-spotify-lighter dark:text-light-lighter text-sm mb-6 flex items-center gap-2">
+            <Smartphone className="w-4 h-4" />
+            Add a phone-based second factor to block unauthorized access.
+          </p>
+
+          {mfaFactors.length > 0 ? (
+            <div className="space-y-3 mb-6">
+              {mfaFactors.map((factor) => (
+                <div
+                  key={factor.uid}
+                  className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border border-spotify-light dark:border-light-light rounded-lg p-4"
+                >
+                  <div>
+                    <p className="font-semibold text-spotify-white dark:text-light-white">{factor.displayName || 'Trusted phone'}</p>
+                    <p className="text-sm text-spotify-lighter dark:text-light-lighter">{factor.phoneNumber}</p>
+                  </div>
+                  <button
+                    onClick={() => disableFactor(factor.uid)}
+                    disabled={disablingUid === factor.uid}
+                    className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-500/10 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <ShieldOff className="w-4 h-4" />
+                    {disablingUid === factor.uid ? 'Removing...' : 'Disable'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-spotify-lighter dark:text-light-lighter mb-6">
+              You have not enabled two-factor authentication yet.
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Phone number</label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+15555555555"
+                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Label (optional)</label>
+              <input
+                type="text"
+                value={phoneLabel}
+                onChange={(e) => setPhoneLabel(e.target.value)}
+                placeholder="Personal phone"
+                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">SMS code</label>
+              <input
+                type="text"
+                value={smsCode}
+                onChange={(e) => setSmsCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+                maxLength={6}
+                disabled={!verificationId}
+                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white disabled:opacity-60"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-start mt-6">
+            <button
+              onClick={sendEnrollmentCode}
+              disabled={mfaProcessing || !phoneNumber}
+              className="px-5 py-3 bg-spotify-green text-spotify-black rounded-lg font-semibold hover:bg-spotify-green/80 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {mfaProcessing && !verificationId ? 'Sending...' : 'Send verification code'}
+            </button>
+            <button
+              onClick={completeEnrollment}
+              disabled={mfaProcessing || !verificationId || smsCode.length < 6}
+              className="px-5 py-3 border border-spotify-green text-spotify-green rounded-lg font-semibold hover:bg-spotify-green/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {mfaProcessing && verificationId ? 'Verifying...' : 'Verify & enable'}
+            </button>
+            {verificationId && (
+              <button
+                onClick={cancelEnrollment}
+                className="px-5 py-3 border border-spotify-light dark:border-light-light rounded-lg text-spotify-white dark:text-light-white hover:border-spotify-white dark:hover:border-light-white transition"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {mfaError && (
+            <div className="mt-4 bg-red-500/20 text-red-200 p-3 rounded">{mfaError}</div>
+          )}
+          {mfaMessage && (
+            <div className="mt-4 bg-green-500/20 text-green-200 p-3 rounded">{mfaMessage}</div>
+          )}
+        </div>
+
+        <div id="settings-mfa-recaptcha" className="hidden" />
       </div>
     </div>
   );

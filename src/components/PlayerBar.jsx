@@ -112,7 +112,7 @@ export default function PlayerBar({
   };
 
   return (
-    <footer className="h-24 bg-spotify-dark border-t border-spotify-light flex items-center justify-between px-6 sticky bottom-0 z-50">
+    <footer className="h-24 bg-spotify-dark dark:bg-light-dark border-t border-spotify-light dark:border-light-light flex items-center justify-between px-6 sticky bottom-0 z-50">
       {/* Song Info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {currentSong ? (
@@ -129,20 +129,20 @@ export default function PlayerBar({
               ) : null}
 
               {(imgError || !currentSong.cover) && (
-                <div className="w-14 h-14 rounded bg-spotify-light/20 flex items-center justify-center absolute inset-0">
-                  <Music className="w-8 h-8 text-spotify-lighter" />
+                <div className="w-14 h-14 rounded bg-spotify-light/20 dark:bg-light-light/20 flex items-center justify-center absolute inset-0">
+                  <Music className="w-8 h-8 text-spotify-lighter dark:text-light-lighter" />
                 </div>
               )}
             </div>
 
             <div className="min-w-0">
-              <h4 className="text-spotify-white font-medium truncate">{currentSong.title}</h4>
-              <p className="text-spotify-lighter text-sm truncate">{currentSong.artist}</p>
+              <h4 className="text-spotify-white dark:text-light-white font-medium truncate">{currentSong.title}</h4>
+              <p className="text-spotify-lighter dark:text-light-lighter text-sm truncate">{currentSong.artist}</p>
             </div>
 
             <button
               onClick={onFavoriteToggle}
-              className={`p-1 transition ${isFavorite ? 'text-spotify-green' : 'hover:text-spotify-green text-spotify-lighter'}`}
+              className={`p-1 transition ${isFavorite ? 'text-spotify-green' : 'hover:text-spotify-green text-spotify-lighter dark:text-light-lighter dark:hover:text-spotify-green'}`}
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
@@ -150,14 +150,14 @@ export default function PlayerBar({
             {onAddToPlaylist && (
               <button
                 onClick={() => onAddToPlaylist(currentSong)}
-                className="p-1 hover:text-spotify-green text-spotify-lighter transition"
+                className="p-1 hover:text-spotify-green text-spotify-lighter dark:text-light-lighter dark:hover:text-spotify-green transition"
               >
                 <Plus className="w-4 h-4" />
               </button>
             )}
           </>
         ) : (
-          <div className="text-spotify-lighter">No song selected</div>
+          <div className="text-spotify-lighter dark:text-light-lighter">No song selected</div>
         )}
       </div>
 
@@ -166,29 +166,29 @@ export default function PlayerBar({
         <div className="flex items-center gap-4">
           <button
             onClick={onShuffleToggle}
-            className={`p-1 transition ${shuffle ? 'text-spotify-green' : 'hover:text-spotify-white text-spotify-lighter'}`}
+            className={`p-1 transition ${shuffle ? 'text-spotify-green' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
           >
             <Shuffle className="w-4 h-4" />
           </button>
-          <button onClick={onPrev} className="p-2 hover:text-spotify-white text-spotify-lighter transition">
+          <button onClick={onPrev} className="p-2 hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter transition">
             <SkipBack className="w-5 h-5" />
           </button>
           <button
             onClick={onTogglePlayPause}
-            className="p-3 bg-spotify-white hover:bg-spotify-lighter rounded-full transition"
+            className="p-3 bg-spotify-white dark:bg-light-white hover:bg-spotify-lighter dark:hover:bg-light-lighter rounded-full transition"
           >
             {isPlaying ? (
-              <Pause className="w-6 h-6 text-spotify-black" fill="currentColor" />
+              <Pause className="w-6 h-6 text-spotify-black dark:text-light-black" fill="currentColor" />
             ) : (
-              <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
+              <Play className="w-6 h-6 text-spotify-black dark:text-light-black" fill="currentColor" />
             )}
           </button>
-          <button onClick={onNext} className="p-2 hover:text-spotify-white text-spotify-lighter transition">
+          <button onClick={onNext} className="p-2 hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter transition">
             <SkipForward className="w-5 h-5" />
           </button>
           <button
             onClick={handleLoopClick}
-            className={`p-1 transition relative ${loop !== 'off' ? 'text-spotify-green' : 'hover:text-spotify-white text-spotify-lighter'}`}
+            className={`p-1 transition relative ${loop !== 'off' ? 'text-spotify-green' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
           >
             <Repeat className="w-4 h-4" />
             {loop === 'one' && <span className="absolute -top-1 -right-1 text-xs text-spotify-green font-bold">1</span>}
@@ -196,26 +196,26 @@ export default function PlayerBar({
         </div>
 
         <div className="flex items-center gap-2 w-full">
-          <span className="text-xs text-spotify-lighter">{formatTime(progress)}</span>
-          <div onClick={handleProgressClick} className="flex-1 bg-spotify-light rounded-full h-1 cursor-pointer">
+          <span className="text-xs text-spotify-lighter dark:text-light-lighter">{formatTime(progress)}</span>
+          <div onClick={handleProgressClick} className="flex-1 bg-spotify-light dark:bg-light-light rounded-full h-1 cursor-pointer">
             <div
-              className="bg-spotify-white h-1 rounded-full"
+              className="bg-spotify-white dark:bg-light-white h-1 rounded-full"
               style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }}
             ></div>
           </div>
-          <span className="text-xs text-spotify-lighter">{formatTime(duration)}</span>
+          <span className="text-xs text-spotify-lighter dark:text-light-lighter">{formatTime(duration)}</span>
         </div>
       </div>
 
       {/* Volume Controls */}
       <div className="flex items-center gap-2 flex-1 justify-end">
-        <button className="p-1 hover:text-spotify-white text-spotify-lighter transition">
+        <button className="p-1 hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter transition">
           <MoreHorizontal className="w-4 h-4" />
         </button>
-        <Volume2 className="w-4 h-4 text-spotify-lighter" />
-        <div onClick={handleVolumeClick} className="w-24 bg-spotify-light rounded-full h-1 cursor-pointer">
+        <Volume2 className="w-4 h-4 text-spotify-lighter dark:text-light-lighter" />
+        <div onClick={handleVolumeClick} className="w-24 bg-spotify-light dark:bg-light-light rounded-full h-1 cursor-pointer">
           <div
-            className="bg-spotify-white h-1 rounded-full"
+            className="bg-spotify-white dark:bg-light-white h-1 rounded-full"
             style={{ width: `${volume * 100}%` }}
           ></div>
         </div>

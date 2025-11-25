@@ -1,19 +1,19 @@
-import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu } from "lucide-react";
+import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu, Sun, Moon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchItunes } from "../utils/itunesApi";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function Navbar({ user, onLogin, onLogout, onSearchResult, onToggleMobileSidebar }) {
   const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
-  const [settingsDropdown, setSettingsDropdown] = useState(false);
   const searchRef = useRef(null);
   const profileRef = useRef(null);
-  const settingsRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -22,9 +22,6 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
       }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileDropdown(false);
-      }
-      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
-        setSettingsDropdown(false);
       }
     };
 
@@ -83,11 +80,11 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
   };
 
   return (
-    <header className="w-screen fixed top-0 left-0 z-50 bg-spotify-black/90 backdrop-blur-lg border-b border-spotify-light flex justify-between items-center px-4 md:px-6 py-4">
+    <header className="w-screen fixed top-0 left-0 z-50 bg-spotify-black/90 dark:bg-light-dark/90 backdrop-blur-lg border-b border-spotify-light dark:border-light-light flex justify-between items-center px-4 md:px-6 py-4">
       {/* Mobile Menu Button */}
       <button
         onClick={onToggleMobileSidebar}
-        className="md:hidden p-2 mr-2 text-spotify-lighter hover:text-spotify-white transition"
+        className="md:hidden p-2 mr-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white transition"
       >
         <Menu className="w-6 h-6" />
       </button>
@@ -95,7 +92,7 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
       {/* Logo */}
       <div className="flex items-center">
         <Music className="w-8 h-8 text-spotify-green mr-2" />
-        <h1 className="text-spotify-white text-xl font-bold hidden sm:block">CloudJamz</h1>
+        <h1 className="text-spotify-white dark:text-light-white text-xl font-bold hidden sm:block">CloudJamz</h1>
       </div>
 
       {/* Search */}
@@ -106,16 +103,16 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-12 py-3 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green hidden md:block"
+            className="w-full px-12 py-3 rounded-full bg-spotify-light dark:bg-light-light text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green hidden md:block"
           />
           <input
             type="text"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-10 py-2 rounded-full bg-spotify-light text-spotify-white placeholder-spotify-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green md:hidden"
+            className="w-full px-10 py-2 rounded-full bg-spotify-light dark:bg-light-light text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green md:hidden"
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-spotify-light md:left-4 md:w-5 md:h-5 left-3 w-4 h-4" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-spotify-lighter dark:text-light-lighter bg-spotify-light dark:bg-light-light md:left-4 md:w-5 md:h-5 left-3 w-4 h-4" />
           {loading && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
               <div className="w-4 h-4 border-2 border-spotify-green border-t-transparent rounded-full animate-spin"></div>
@@ -125,12 +122,12 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
 
         {/* Search Results Dropdown */}
         {showResults && searchResults.length > 0 && (
-          <div className="absolute top-full mt-2 w-full bg-spotify-dark border border-spotify-light rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+          <div className="absolute top-full mt-2 w-full bg-spotify-dark dark:bg-light-dark border border-spotify-light dark:border-light-light rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
             {searchResults.map((result) => (
               <button
                 key={`${result.type}-${result.id}`}
                 onClick={() => handleResultClick(result)}
-                className="w-full px-4 py-3 text-left hover:bg-spotify-light/20 transition flex items-center gap-3"
+                className="w-full px-4 py-3 text-left hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3"
               >
                 {result.cover && (
                   <img
@@ -140,14 +137,14 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-spotify-white font-medium truncate">{result.title}</div>
-                  <div className="text-spotify-lighter text-sm truncate">
+                  <div className="text-spotify-white dark:text-light-white font-medium truncate">{result.title}</div>
+                  <div className="text-spotify-lighter dark:text-light-lighter text-sm truncate">
                     {result.type === 'track' && `${result.artist} • ${result.album}`}
                     {result.type === 'artist' && 'Artist'}
                     {result.type === 'album' && `${result.artist} • Album`}
                   </div>
                 </div>
-                <div className="text-spotify-lighter text-xs capitalize">{result.type}</div>
+                <div className="text-spotify-lighter dark:text-light-lighter text-xs capitalize">{result.type}</div>
               </button>
             ))}
           </div>
@@ -158,68 +155,46 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
       <div className="flex items-center gap-2">
         {user ? (
           <>
-            {/* Settings Icon */}
-            <div className="relative" ref={settingsRef}>
-              <button
-                onClick={() => setSettingsDropdown(!settingsDropdown)}
-                className="p-3 rounded-full bg-spotify-dark hover:bg-spotify-light transition"
-              >
-                <Settings className="w-6 h-6 text-spotify-lighter" />
-              </button>
-              {settingsDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg z-50">
-                  <button
-                    onClick={() => navigate('/settings')}
-                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
-                  >
-                    <Palette className="w-4 h-4" />
-                    Theme
-                  </button>
-                  <button
-                    onClick={() => navigate('/settings')}
-                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
-                  >
-                    <Bell className="w-4 h-4" />
-                    Notifications
-                  </button>
-                  <button
-                    onClick={() => navigate('/settings')}
-                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
-                  >
-                    <Shield className="w-4 h-4" />
-                    Privacy
-                  </button>
-                </div>
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-3 rounded-full bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light dark:hover:bg-light-light transition"
+              title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDarkMode ? (
+                <Sun className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
+              ) : (
+                <Moon className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
               )}
-            </div>
+            </button>
 
             {/* Profile Icon */}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileDropdown(!profileDropdown)}
-                className="p-3 rounded-full bg-spotify-dark hover:bg-spotify-light transition"
+                className="p-3 rounded-full bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light dark:hover:bg-light-light transition"
               >
-                <User className="w-6 h-6 text-spotify-lighter" />
+                <User className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
               </button>
               {profileDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg z-50">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-spotify-dark dark:bg-light-dark border border-spotify-light dark:border-light-light rounded-lg shadow-lg z-50">
                   <button
                     onClick={() => navigate('/playlists')}
-                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-2"
                   >
                     <ListMusic className="w-4 h-4" />
                     My Playlists
                   </button>
                   <button
                     onClick={() => navigate('/account-settings')}
-                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-2"
                   >
                     <UserCog className="w-4 h-4" />
                     Account Settings
                   </button>
                   <button
                     onClick={onLogout}
-                    className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-2"
                   >
                     <LogOut className="w-4 h-4" />
                     Logout

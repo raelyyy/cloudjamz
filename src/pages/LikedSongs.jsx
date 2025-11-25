@@ -66,8 +66,8 @@ export default function LikedSongs({ user, onPlaySong, onFavorite, onAddToPlayli
 
   if (!user) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-        <div className="text-spotify-lighter text-center">
+      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="text-spotify-lighter dark:text-light-lighter text-center">
           Please log in to view your liked songs.
         </div>
       </main>
@@ -75,10 +75,10 @@ export default function LikedSongs({ user, onPlaySong, onFavorite, onAddToPlayli
   }
 
   return (
-    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-      <h1 className="text-3xl font-bold text-spotify-white mb-8">Liked Songs</h1>
+    <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+      <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white mb-8">Liked Songs</h1>
       {loading ? (
-        <div className="text-spotify-lighter">Loading liked songs...</div>
+        <div className="text-spotify-lighter dark:text-light-lighter">Loading liked songs...</div>
       ) : likedSongs.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {likedSongs.map((song) => (
@@ -95,7 +95,7 @@ export default function LikedSongs({ user, onPlaySong, onFavorite, onAddToPlayli
           ))}
         </div>
       ) : (
-        <div className="text-spotify-lighter text-center">
+        <div className="text-spotify-lighter dark:text-light-lighter text-center">
           You haven't liked any songs yet.
         </div>
       )}

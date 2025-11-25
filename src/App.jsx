@@ -321,6 +321,7 @@ function AppContent() {
             url: uploadResult.url,
             userId: user.uid,
             cloudinaryPublicId: uploadResult.publicId,
+            isUploaded: true,
           };
 
           // Save to Firestore
@@ -646,7 +647,7 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-spotify-black">
+      <div className="flex flex-col items-center justify-center h-screen bg-spotify-black dark:bg-light-black">
         <div className="flex items-center mb-4">
           <Music className="w-12 h-12 text-spotify-green mr-3" />
           
@@ -662,7 +663,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-spotify-black">
+    <div className="flex flex-col h-screen bg-spotify-black dark:bg-light-black">
       <audio ref={audioRef} onEnded={handleSongEnd} />
       <Navbar user={user} onLogin={handleLogin} onLogout={handleLogout} onSearchResult={(result) => {
         if (result.type === 'track' && result.url) {
@@ -696,7 +697,7 @@ function AppContent() {
             <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} />} />
             <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} />} />
             <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
+            <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
             <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
             <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
             <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
@@ -721,14 +722,14 @@ function AppContent() {
       {/* Playlist Modal */}
       {showPlaylistModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-spotify-dark p-6 rounded-lg w-96">
+          <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-96">
             <h3 className="text-white text-lg font-semibold mb-4">Select a Playlist</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {playlists.map((playlist) => (
                 <button
                   key={playlist.id}
                   onClick={() => setSelectedPlaylist(playlist)}
-                  className={`w-full text-left p-3 rounded text-white transition border-2 ${
+                  className={`w-full text-left p-3 rounded text-spotify-white dark:text-light-white transition border-2 ${
                     selectedPlaylist?.id === playlist.id
                       ? 'border-spotify-green text-spotify-green bg-transparent'
                       : 'border-gray-600 hover:border-spotify-green/50'
@@ -769,8 +770,8 @@ function AppContent() {
       {/* Create Playlist Modal */}
       {showCreatePlaylistModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-spotify-dark p-6 rounded-lg w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold text-spotify-white mb-4">Create New Playlist</h2>
+          <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-spotify-white dark:text-light-white mb-4">Create New Playlist</h2>
             <form onSubmit={createPlaylist} className="space-y-4">
               <div>
                 <input
@@ -778,7 +779,7 @@ function AppContent() {
                   placeholder="Playlist name"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
                   required
                 />
               </div>
@@ -787,17 +788,17 @@ function AppContent() {
                   placeholder="Description (optional)"
                   value={newPlaylistDescription}
                   onChange={(e) => setNewPlaylistDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green resize-none"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green resize-none"
                   rows="3"
                 />
               </div>
               <div>
-                <label className="block text-spotify-lighter text-sm mb-2">Cover Image (optional)</label>
+                <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setNewPlaylistCover(e.target.files[0])}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-spotify-green transition"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-spotify-green transition"
                 />
               </div>
               <div className="flex gap-4">
@@ -816,7 +817,7 @@ function AppContent() {
                     setNewPlaylistDescription("");
                     setNewPlaylistCover(null);
                   }}
-                  className="px-4 py-2 border border-spotify-light text-spotify-white rounded hover:border-spotify-white transition"
+                  className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
                 >
                   Cancel
                 </button>

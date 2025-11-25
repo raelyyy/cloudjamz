@@ -1,11 +1,21 @@
-import { Play, Pause, MoreHorizontal, Heart, Plus, Share, Download, Trash2, Music, RotateCcw, X } from "lucide-react";
+import { Play, Pause, MoreHorizontal, Heart, Plus, Share, Download, Trash2, Music, RotateCcw, X, Edit2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import EditSongModal from "./EditSongModal";
+import { auth } from "../firebase";
 
-export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, onRemoveFromPlaylist, className = '', isPlaying = false, showAddToPlaylist = true, showLikeButton = true, isFavorite = false }) {
+export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, onRemoveFromPlaylist, onEdit, className = '', isPlaying = false, showAddToPlaylist = true, showLikeButton = true, isFavorite = false }) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [songToEdit, setSongToEdit] = useState(null);
+
+  const handleMenuClick = (e) => {
+    e.stopPropagation();
+    setShowMenu(!showMenu);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -37,9 +47,18 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
     navigate(`/song/${song.id}`);
   };
 
-  const handleMenuClick = (e) => {
-    e.stopPropagation();
-    setShowMenu(!showMenu);
+  const openEditModal = (song) => {
+    setSongToEdit(song);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setSongToEdit(null);
+  };
+
+  const handleSaveEdit = (updatedSong) => {
+    onEdit?.(updatedSong);
   };
 
   const handleAction = (action, e) => {
@@ -52,6 +71,11 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         break;
       case 'addToPlaylist':
         onAddToPlaylist?.(song);
+        break;
+      case 'edit':
+        if (canEditSong) {
+          openEditModal(song);
+        }
         break;
       case 'share':
         if (navigator.share) {
@@ -90,119 +114,139 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
     }
   };
 
-  return (
-    <div onClick={handleCardClick} className={`bg-spotify-dark rounded-lg p-4 hover:bg-spotify-light/20 transition cursor-pointer group relative ${isPlaying ? 'ring-2 ring-spotify-green' : ''} ${className || ''}`}>
-      <div className="relative mb-4">
-        <img
-          src={song.cover || 'invalid'}
-          alt={song.title}
-          className="rounded-lg w-full aspect-square object-cover shadow-lg"
-          onError={(e) => {
-            e.target.style.display = 'none';
-            e.target.nextSibling.style.display = 'flex';
-          }}
-        />
-        <div className="rounded-lg w-full aspect-square bg-spotify-light/20 flex items-center justify-center shadow-lg hidden">
-          <Music className="w-24 h-24 text-spotify-lighter" />
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onPlay(song);
-          }}
-          className={`absolute bottom-2 right-2 p-3 bg-spotify-green rounded-full transition-opacity shadow-lg hover:bg-spotify-green/80 ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? (
-            <Pause className="w-6 h-6 text-spotify-black" fill="currentColor" />
-          ) : (
-            <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
-          )}
-        </button>
-        <button
-          onClick={handleMenuClick}
-          className="absolute top-2 right-2 p-2 bg-spotify-dark/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-spotify-light/20"
-          aria-label="More options"
-        >
-          <MoreHorizontal className="w-4 h-4 text-spotify-white" />
-        </button>
+  const currentUserId = auth?.currentUser?.uid;
+  const canEditSong = Boolean(onEdit) && !!song?.userId && currentUserId === song.userId;
 
-        {/* File Actions Menu */}
-        {showMenu && (
-          <div ref={menuRef} className="absolute top-12 right-2 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg py-2 min-w-48 z-50">
-            {onRestore && (
-              <button
-                onClick={(e) => handleAction('restore', e)}
-                className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Restore
-              </button>
-            )}
-            {onPermanentDelete && (
-              <button
-                onClick={(e) => handleAction('permanentDelete', e)}
-                className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
-              >
-                <X className="w-4 h-4" />
-                Delete Forever
-              </button>
-            )}
-            {showLikeButton && (
-              <button
-                onClick={(e) => handleAction('favorite', e)}
-                className={`w-full px-4 py-2 text-left hover:bg-spotify-light/20 transition flex items-center gap-3 ${isFavorite ? 'text-spotify-green' : 'text-spotify-white'}`}
-              >
-                <Heart className={`w-4 h-4 ${isFavorite ? 'fill-spotify-green text-spotify-green' : ''}`} />
-                {isFavorite ? 'Liked' : 'Add to Favorites'}
-              </button>
-            )}
-            {showAddToPlaylist && !onRemoveFromPlaylist && (
-              <button
-                onClick={(e) => handleAction('addToPlaylist', e)}
-                className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
-              >
-                <Plus className="w-4 h-4" />
-                Add to Playlist
-              </button>
-            )}
-            {onRemoveFromPlaylist && (
-              <button
-                onClick={(e) => handleAction('removeFromPlaylist', e)}
-                className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
-              >
-                <Trash2 className="w-4 h-4" />
-                Remove from Playlist
-              </button>
-            )}
-            <button
-              onClick={(e) => handleAction('share', e)}
-              className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
-            >
-              <Share className="w-4 h-4" />
-              Share
-            </button>
-            <button
-              onClick={(e) => handleAction('download', e)}
-              className="w-full px-4 py-2 text-left text-spotify-white hover:bg-spotify-light/20 transition flex items-center gap-3"
-            >
-              <Download className="w-4 h-4" />
-              Download
-            </button>
-            {onDelete && (
-              <button
-                onClick={(e) => handleAction('delete', e)}
-                className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            )}
+  return (
+    <>
+      <div onClick={handleCardClick} className={`bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition cursor-pointer group relative shadow-lg dark:shadow-xl ${isPlaying ? 'ring-2 ring-spotify-green' : ''} ${className || ''}`}>
+        <div className="relative mb-4">
+          <img
+            src={song.cover || 'invalid'}
+            alt={song.title}
+            className="rounded-lg w-full aspect-square object-cover shadow-lg"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+          <div className="rounded-lg w-full aspect-square bg-spotify-light/20 dark:bg-light-light/20 flex items-center justify-center shadow-lg hidden">
+            <Music className="w-24 h-24 text-spotify-lighter dark:text-light-lighter" />
           </div>
-        )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay(song);
+            }}
+            className={`absolute bottom-2 right-2 p-3 bg-spotify-green rounded-full transition-opacity shadow-lg hover:bg-spotify-green/80 ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+          >
+            {isPlaying ? (
+              <Pause className="w-6 h-6 text-spotify-black" fill="currentColor" />
+            ) : (
+              <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
+            )}
+          </button>
+          <button
+            onClick={handleMenuClick}
+            className="absolute top-2 right-2 p-2 bg-spotify-dark/80 dark:bg-light-dark/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-spotify-light/20 dark:hover:bg-light-light/20"
+            aria-label="More options"
+          >
+            <MoreHorizontal className="w-4 h-4 text-spotify-white dark:text-light-white" />
+          </button>
+
+          {/* File Actions Menu */}
+          {showMenu && (
+            <div ref={menuRef} className="absolute top-12 right-2 bg-spotify-dark dark:bg-light-dark border border-spotify-light dark:border-light-light rounded-lg shadow-xl py-2 min-w-48 z-50">
+              {onRestore && (
+                <button
+                  onClick={(e) => handleAction('restore', e)}
+                  className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Restore
+                </button>
+              )}
+              {onPermanentDelete && (
+                <button
+                  onClick={(e) => handleAction('permanentDelete', e)}
+                  className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
+                >
+                  <X className="w-4 h-4" />
+                  Delete Forever
+                </button>
+              )}
+              {showLikeButton && (
+                <button
+                  onClick={(e) => handleAction('favorite', e)}
+                  className={`w-full px-4 py-2 text-left hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3 ${isFavorite ? 'text-spotify-green' : 'text-spotify-white dark:text-light-white'}`}
+                >
+                  <Heart className={`w-4 h-4 ${isFavorite ? 'fill-spotify-green text-spotify-green' : ''}`} />
+                  {isFavorite ? 'Liked' : 'Add to Favorites'}
+                </button>
+              )}
+              {showAddToPlaylist && !onRemoveFromPlaylist && (
+                <button
+                  onClick={(e) => handleAction('addToPlaylist', e)}
+                  className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add to Playlist
+                </button>
+              )}
+              {canEditSong && (
+                <button
+                  onClick={(e) => handleAction('edit', e)}
+                  className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+              )}
+              {onRemoveFromPlaylist && (
+                <button
+                  onClick={(e) => handleAction('removeFromPlaylist', e)}
+                  className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remove from Playlist
+                </button>
+              )}
+              <button
+                onClick={(e) => handleAction('share', e)}
+                className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3"
+              >
+                <Share className="w-4 h-4" />
+                Share
+              </button>
+              <button
+                onClick={(e) => handleAction('download', e)}
+                className="w-full px-4 py-2 text-left text-spotify-white dark:text-light-white hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </button>
+              {onDelete && (
+                <button
+                  onClick={(e) => handleAction('delete', e)}
+                  className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-400/20 transition flex items-center gap-3"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <h3 onClick={handleTitleClick} className="text-spotify-white dark:text-light-white font-semibold truncate mb-1 hover:underline cursor-pointer">{song.title}</h3>
+        <p onClick={handleArtistClick} className="text-spotify-lighter dark:text-light-lighter text-sm truncate hover:underline cursor-pointer">{song.artist}</p>
       </div>
-      <h3 onClick={handleTitleClick} className="text-spotify-white font-semibold truncate mb-1 hover:underline cursor-pointer">{song.title}</h3>
-      <p onClick={handleArtistClick} className="text-spotify-lighter text-sm truncate hover:underline cursor-pointer">{song.artist}</p>
-    </div>
+      <EditSongModal
+        isOpen={isEditModalOpen}
+        onClose={closeEditModal}
+        song={songToEdit}
+        onSave={handleSaveEdit}
+      />
+    </>
   );
 }

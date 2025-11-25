@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, onSnapshot, collection, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { MoreHorizontal, Edit, Trash2, Share } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Share, ArrowLeft } from "lucide-react";
 import MusicCard from "../components/MusicCard";
 
 export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favorites, onFavorite, onRemoveFromPlaylist }) {
@@ -324,33 +324,36 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
 
   if (loading) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-        <div className="text-spotify-lighter">Loading playlist...</div>
+      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="text-spotify-lighter dark:text-light-lighter">Loading playlist...</div>
       </main>
     );
   }
 
   if (!playlist) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black">
-        <div className="text-spotify-lighter">Playlist not found</div>
+      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="text-spotify-lighter dark:text-light-lighter">Playlist not found</div>
       </main>
     );
   }
 
   return (
-    <main className="flex-1 pt-8 pb-8 px-8 overflow-y-auto bg-spotify-black">
-      <div className={`flex items-center justify-between mb-8 sticky -top-4 bg-gradient-to-b ${genreColors[id] || playlist.gradientColor || getConsistentGradient(id)} to-transparent z-10 pb-4 pt-4 pl-4 pr-8`}>
-        <div className="flex items-center">
+    <main className="flex-1 pt-8 pb-8 px-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="rounded-full w-12 h-12 flex items-center justify-center bg-spotify-gray hover:bg-spotify-dark text-spotify-lighter hover:text-spotify-white transition mr-2 text-2xl font-bold"
+            className="p-2 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 rounded-full transition"
           >
-            {"<"}
+            <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-spotify-white mb-1">{playlist.title}</h1>
-            <p className="text-spotify-lighter">{playlist.description}</p>
+            <h1 className="text-4xl font-bold text-spotify-white dark:text-light-white">{playlist.title}</h1>
+            {playlist.description && (
+              <p className="text-spotify-lighter dark:text-light-lighter text-lg mt-2">{playlist.description}</p>
+            )}
+            <p className="text-spotify-lighter dark:text-light-lighter mt-1">{playlist.songs.length} songs</p>
           </div>
         </div>
 
@@ -358,22 +361,22 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
           <div className="relative">
             <button
               onClick={() => setShowOptions(!showOptions)}
-              className="p-2 hover:bg-spotify-gray rounded-full transition"
+              className="p-2 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 rounded-full transition"
             >
-              <MoreHorizontal className="w-6 h-6 text-spotify-lighter" />
+              <MoreHorizontal className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
             </button>
 
             {showOptions && (
-              <div ref={dropdownRef} className="absolute right-0 top-full mt-2 bg-spotify-dark border border-spotify-light rounded-lg shadow-lg z-20 min-w-48">
-                <button onClick={handleEditPlaylist} className="w-full text-left px-4 py-3 hover:bg-spotify-gray text-spotify-white flex items-center gap-3 rounded-t-lg">
+              <div ref={dropdownRef} className="absolute right-0 top-full mt-2 bg-spotify-dark dark:bg-light-dark border border-spotify-light dark:border-light-light rounded-lg shadow-lg z-20 min-w-48">
+                <button onClick={handleEditPlaylist} className="w-full text-left px-4 py-3 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 text-spotify-white dark:text-light-white flex items-center gap-3 rounded-t-lg">
                   <Edit className="w-4 h-4" />
                   Edit playlist
                 </button>
-                <button onClick={handleSharePlaylist} className="w-full text-left px-4 py-3 hover:bg-spotify-gray text-spotify-white flex items-center gap-3">
+                <button onClick={handleSharePlaylist} className="w-full text-left px-4 py-3 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 text-spotify-white dark:text-light-white flex items-center gap-3">
                   <Share className="w-4 h-4" />
                   Share playlist
                 </button>
-                <button onClick={handleDeletePlaylist} className="w-full text-left px-4 py-3 hover:bg-spotify-gray text-red-400 flex items-center gap-3 rounded-b-lg">
+                <button onClick={handleDeletePlaylist} className="w-full text-left px-4 py-3 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 text-red-400 flex items-center gap-3 rounded-b-lg">
                   <Trash2 className="w-4 h-4" />
                   Delete playlist
                 </button>
@@ -385,8 +388,8 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
 
       {playlist.songs.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <div className="text-spotify-lighter text-lg mb-2">This playlist is empty</div>
-          <div className="text-spotify-gray text-sm">Add some songs to get started!</div>
+          <div className="text-spotify-lighter dark:text-light-lighter text-lg mb-2">This playlist is empty</div>
+          <div className="text-spotify-lighter dark:text-light-lighter text-sm">Add some songs to get started!</div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -424,8 +427,8 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
       {/* Edit Playlist Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-spotify-dark p-6 rounded-lg w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold text-spotify-white mb-4">Edit Playlist</h2>
+          <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-spotify-white dark:text-light-white mb-4">Edit Playlist</h2>
             <form onSubmit={editPlaylist} className="space-y-4">
               <div>
                 <input
@@ -433,7 +436,7 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
                   placeholder="Playlist name"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
                   required
                 />
               </div>
@@ -442,19 +445,19 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
                   placeholder="Description (optional)"
                   value={editingDescription}
                   onChange={(e) => setEditingDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green resize-none"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green resize-none"
                   rows="3"
                 />
               </div>
               <div>
-                <label className="block text-spotify-lighter text-sm mb-2">Cover Image (optional)</label>
+                <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setEditingCover(e.target.files[0])}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 hover:file:bg-spotify-green/80"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 hover:file:bg-spotify-green/80"
                 />
-                {uploadingCover && <p className="text-spotify-lighter text-sm mt-1">Uploading cover...</p>}
+                {uploadingCover && <p className="text-spotify-lighter dark:text-light-lighter text-sm mt-1">Uploading cover...</p>}
               </div>
               <div className="flex justify-end gap-4 mt-4">
                 <button
@@ -472,7 +475,7 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
                     setEditingDescription("");
                     setEditingCover(null);
                   }}
-                  className="px-4 py-2 border border-spotify-light text-spotify-white rounded hover:border-spotify-white transition"
+                  className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
                 >
                   Cancel
                 </button>

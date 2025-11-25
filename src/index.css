@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  @apply bg-spotify-black text-spotify-white;
+  @apply bg-spotify-black text-spotify-white dark:bg-white dark:text-black;
 }
 
 /* Custom Scrollbar Styling */
@@ -28,23 +28,62 @@ body {
   background: #1a202c;
 }
 
+/* Light mode scrollbars */
+.dark ::-webkit-scrollbar-track {
+  background: #f1f5f9; /* Light track */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Light gray thumb */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Darker on hover */
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+}
+
 /* Custom scrollbar for suggested-scroll */
-#suggested-scroll::-webkit-scrollbar {
+#suggested-scroll::-webkit-scrollbar,
+#my-music-scroll::-webkit-scrollbar {
   height: 8px;
 }
 
-#suggested-scroll::-webkit-scrollbar-track {
+#suggested-scroll::-webkit-scrollbar-track,
+#my-music-scroll::-webkit-scrollbar-track {
   background: #1a202c;
   border-radius: 4px;
 }
 
-#suggested-scroll::-webkit-scrollbar-thumb {
+#suggested-scroll::-webkit-scrollbar-thumb,
+#my-music-scroll::-webkit-scrollbar-thumb {
   background: #4a5568;
   border-radius: 4px;
 }
 
-#suggested-scroll::-webkit-scrollbar-thumb:hover {
+#suggested-scroll::-webkit-scrollbar-thumb:hover,
+#my-music-scroll::-webkit-scrollbar-thumb:hover {
   background: #718096;
+}
+
+/* Light mode for suggested and my-music scrollbars */
+.dark #suggested-scroll::-webkit-scrollbar-track,
+.dark #my-music-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.dark #suggested-scroll::-webkit-scrollbar-thumb,
+.dark #my-music-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark #suggested-scroll::-webkit-scrollbar-thumb:hover,
+.dark #my-music-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* Custom scrollbar for playlists-scroll */
@@ -64,4 +103,19 @@ body {
 
 #playlists-scroll::-webkit-scrollbar-thumb:hover {
   background: #718096;
+}
+
+/* Light mode for playlists scrollbar */
+.dark #playlists-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.dark #playlists-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark #playlists-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

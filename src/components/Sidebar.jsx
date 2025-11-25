@@ -54,11 +54,11 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={onToggleMobile} />
-          <aside className="w-64 bg-spotify-dark border-r border-spotify-light p-6 overflow-y-auto absolute left-0 top-0 h-full">
+          <aside className="w-64 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-6 overflow-y-auto absolute left-0 top-0 h-full">
             {/* Mobile Close Button */}
             <button
               onClick={onToggleMobile}
-              className="absolute top-4 right-4 p-2 text-spotify-lighter hover:text-spotify-white transition"
+              className="absolute top-4 right-4 p-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white transition"
             >
               <X className="w-6 h-6" />
             </button>
@@ -80,19 +80,19 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
       <nav className="mb-8">
         <ul className="space-y-2">
           <li>
-            <button onClick={() => onNavigate('/')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+            <button onClick={() => onNavigate('/')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
               <Home className="w-6 h-6" />
               Home
             </button>
           </li>
           <li>
-            <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+            <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
               <Library className="w-6 h-6" />
               Your Library
             </button>
           </li>
           <li>
-            <button onClick={() => onNavigate('/trash')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+            <button onClick={() => onNavigate('/trash')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
               <Trash2 className="w-6 h-6" />
               Trash
             </button>
@@ -103,27 +103,27 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
       {/* Playlists */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <button onClick={onCreatePlaylist} className="flex items-center gap-2 text-spotify-lighter hover:text-spotify-white transition">
+          <button onClick={onCreatePlaylist} className="flex items-center gap-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white transition">
             <Plus className="w-5 h-5" />
             Create Playlist
           </button>
         </div>
         <ul className="space-y-2">
           <li>
-            <button onClick={() => onNavigate('/liked')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+            <button onClick={() => onNavigate('/liked')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
               <Heart className="w-5 h-5 text-spotify-green" />
               Liked Songs
             </button>
           </li>
           <li>
-            <button onClick={() => onNavigate('/my-music')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+            <button onClick={() => onNavigate('/my-music')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
               <Music className="w-5 h-5" />
               My Music
             </button>
           </li>
           {userPlaylists.slice(0, 5).map((playlist) => (
             <li key={playlist.id}>
-              <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className="block px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition truncate w-full text-left">
+              <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className="block px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition truncate w-full text-left">
                 {playlist.name}
               </button>
             </li>
@@ -163,7 +163,7 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="w-64 bg-spotify-dark border-r border-spotify-light p-6 overflow-y-auto hidden md:block relative">
+      <aside className="w-64 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-6 overflow-y-auto hidden md:block relative">
         {/* Upload Section */}
         <div className="mb-4 mt-4">
           <button
@@ -180,19 +180,19 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
         <nav className="mb-8">
           <ul className="space-y-2">
             <li>
-              <button onClick={() => onNavigate('/')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+              <button onClick={() => onNavigate('/')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
                 <Home className="w-6 h-6" />
                 Home
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+              <button onClick={() => onNavigate('/playlists')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
                 <Library className="w-6 h-6" />
                 Your Library
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('/trash')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+              <button onClick={() => onNavigate('/trash')} className="flex items-center gap-4 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
                 <Trash2 className="w-6 h-6" />
                 Trash
               </button>
@@ -203,27 +203,27 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
         {/* Playlists */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <button onClick={onCreatePlaylist} className="flex items-center gap-2 text-spotify-lighter hover:text-spotify-white transition">
+            <button onClick={onCreatePlaylist} className="flex items-center gap-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white transition">
               <Plus className="w-5 h-5" />
               Create Playlist
             </button>
           </div>
           <ul className="space-y-2">
             <li>
-              <button onClick={() => onNavigate('/liked')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+              <button onClick={() => onNavigate('/liked')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
                 <Heart className="w-5 h-5 text-spotify-green" />
                 Liked Songs
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('/my-music')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition w-full text-left">
+              <button onClick={() => onNavigate('/my-music')} className="flex items-center gap-3 px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition w-full text-left">
                 <Music className="w-5 h-5" />
                 My Music
               </button>
             </li>
             {userPlaylists.slice(0, 5).map((playlist) => (
               <li key={playlist.id}>
-                <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className="block px-4 py-2 text-spotify-lighter hover:text-spotify-white hover:bg-spotify-light rounded-lg transition truncate w-full text-left">
+                <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className="block px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition truncate w-full text-left">
                   {playlist.name}
                 </button>
               </li>
