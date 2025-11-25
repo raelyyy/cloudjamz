@@ -652,7 +652,7 @@ function AppContent() {
           <Music className="w-12 h-12 text-spotify-green mr-3" />
           
         </div>
-        <h1 className="text-spotify-white text-3xl font-bold">CloudJamz</h1>
+        <h1 className="text-spotify-white dark:text-light-white text-3xl font-bold">CloudJamz</h1>
         <div className="text-spotify-lighter text-3xl font-bold">•••</div>
       </div>
     );
