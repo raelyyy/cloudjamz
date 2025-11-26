@@ -3,17 +3,20 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchItunes } from "../utils/itunesApi";
 import { useTheme } from "../contexts/ThemeContext";
+import GradientText from "./GradientText";
 
 export default function Navbar({ user, onLogin, onLogout, onSearchResult, onToggleMobileSidebar }) {
-  const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useTheme();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [profileDropdown, setProfileDropdown] = useState(false);
-  const searchRef = useRef(null);
-  const profileRef = useRef(null);
+   const navigate = useNavigate();
+   const { isDarkMode, toggleTheme } = useTheme();
+   const [searchQuery, setSearchQuery] = useState("");
+   const [searchResults, setSearchResults] = useState([]);
+   const [showResults, setShowResults] = useState(false);
+   const [loading, setLoading] = useState(false);
+   const [profileDropdown, setProfileDropdown] = useState(false);
+   const searchRef = useRef(null);
+   const profileRef = useRef(null);
+
+   const logoColors = isDarkMode ? ["#DAA520", "#F7E35A", "#DAA520", "#F7E35A", "#DAA520"] : ["#FFD700", "#F7E35A", "#FFD700", "#F7E35A", "#FFD700"];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,22 +42,24 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
 
       setLoading(true);
       try {
-        const data = await searchItunes(searchQuery);
+        const trackResults = await searchItunes(searchQuery);
+        const artistResults = await searchItunes(searchQuery, 'musicArtist');
+        const albumResults = await searchItunes(searchQuery, 'album');
         const results = [];
 
-        // Add tracks (iTunes returns only tracks with preview URLs)
-        if (data && data.length > 0) {
-          results.push(...data.slice(0, 5).map(track => ({
-            id: track.id,
-            type: 'track',
-            title: track.title,
-            artist: track.artist,
-            album: track.album,
-            cover: track.cover,
-            url: track.url,
-            external_url: track.external_url,
-            duration: track.duration
-          })));
+        // Add tracks
+        if (trackResults && trackResults.length > 0) {
+          results.push(...trackResults.slice(0, 4));
+        }
+
+        // Add artists
+        if (artistResults && artistResults.length > 0) {
+          results.push(...artistResults.slice(0, 2));
+        }
+
+        // Add albums
+        if (albumResults && albumResults.length > 0) {
+          results.push(...albumResults.slice(0, 2));
         }
 
         setSearchResults(results);
@@ -91,8 +96,15 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
 
       {/* Logo */}
       <div className="flex items-center">
-        <Music className="w-8 h-8 text-spotify-green mr-2" />
-        <h1 className="text-spotify-white dark:text-light-white text-xl font-bold hidden sm:block">CloudJamz</h1>
+        <Music className="w-8 h-8 mr-2" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
+        <GradientText
+          colors={logoColors}
+          animationSpeed={5}
+          showBorder={false}
+          className="text-xl font-black hidden sm:block"
+        >
+          CloudJamz
+        </GradientText>
       </div>
 
       {/* Search */}
@@ -103,19 +115,19 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-12 py-3 rounded-full bg-spotify-light dark:bg-light-light text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green hidden md:block"
+            className={`w-full px-12 py-3 rounded-full bg-spotify-light dark:bg-light-light text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-[#DAA520]' : 'focus:ring-[#F7E35A]'} hidden md:block`}
           />
           <input
             type="text"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-10 py-2 rounded-full bg-spotify-light dark:bg-light-light text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-spotify-green md:hidden"
+            className={`w-full px-10 py-2 rounded-full bg-spotify-light dark:bg-light-light text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-[#DAA520]' : 'focus:ring-[#F7E35A]'} md:hidden`}
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-spotify-lighter dark:text-light-lighter bg-spotify-light dark:bg-light-light md:left-4 md:w-5 md:h-5 left-3 w-4 h-4" />
           {loading && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-spotify-green border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>

@@ -249,7 +249,7 @@ export default function AccountSettingsPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5 text-spotify-green" />
+                  <User className="w-5 h-5 text-yellow-400" />
                   Profile Information
                 </h2>
                 <div className="space-y-4">
@@ -259,7 +259,7 @@ export default function AccountSettingsPage() {
                       type="text"
                       value={formData.displayName}
                       onChange={(e) => handleInputChange('displayName', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
                       placeholder="Enter your display name"
                     />
                   </div>
@@ -269,7 +269,7 @@ export default function AccountSettingsPage() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -281,7 +281,7 @@ export default function AccountSettingsPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-spotify-green" />
+                  <Lock className="w-5 h-5 text-yellow-400" />
                   Change Password
                 </h2>
                 <div className="space-y-4">
@@ -291,7 +291,7 @@ export default function AccountSettingsPage() {
                       type="password"
                       value={formData.currentPassword}
                       onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
                       placeholder="Enter current password"
                     />
                   </div>
@@ -301,7 +301,7 @@ export default function AccountSettingsPage() {
                       type="password"
                       value={formData.newPassword}
                       onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
                       placeholder="Enter new password"
                     />
                   </div>
@@ -311,7 +311,7 @@ export default function AccountSettingsPage() {
                       type="password"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                      className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
                       placeholder="Confirm new password"
                     />
                   </div>
@@ -332,7 +332,7 @@ export default function AccountSettingsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-spotify-green hover:bg-spotify-green/80 disabled:opacity-50 disabled:cursor-not-allowed text-spotify-black font-medium py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
+              className="w-full bg-yellow-500 hover:bg-yellow-500/80 disabled:opacity-50 disabled:cursor-not-allowed text-spotify-black font-medium py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
             >
               <Save className="w-5 h-5" />
               {saving ? 'Saving...' : 'Save Changes'}
@@ -342,7 +342,7 @@ export default function AccountSettingsPage() {
 
         <div className="bg-spotify-dark dark:bg-light-dark rounded-lg p-6 w-full mt-8">
           <div className="flex items-center gap-3 mb-4">
-            <ShieldCheck className="w-6 h-6 text-spotify-green" />
+            <ShieldCheck className="w-6 h-6 text-yellow-400" />
             <h2 className="text-2xl font-semibold text-spotify-white dark:text-light-white">Two-Factor Authentication</h2>
           </div>
           <p className="text-spotify-lighter dark:text-light-lighter text-sm mb-6 flex items-center gap-2">
@@ -386,7 +386,7 @@ export default function AccountSettingsPage() {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+15555555555"
-                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
               />
             </div>
             <div>
@@ -396,7 +396,7 @@ export default function AccountSettingsPage() {
                 value={phoneLabel}
                 onChange={(e) => setPhoneLabel(e.target.value)}
                 placeholder="Personal phone"
-                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white"
+                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
               />
             </div>
           </div>
@@ -411,7 +411,7 @@ export default function AccountSettingsPage() {
                 placeholder="Enter 6-digit code"
                 maxLength={6}
                 disabled={!verificationId}
-                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-spotify-green text-spotify-white dark:text-light-white disabled:opacity-60"
+                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white disabled:opacity-60"
               />
             </div>
           </div>
@@ -420,14 +420,14 @@ export default function AccountSettingsPage() {
             <button
               onClick={sendEnrollmentCode}
               disabled={mfaProcessing || !phoneNumber}
-              className="px-5 py-3 bg-spotify-green text-spotify-black rounded-lg font-semibold hover:bg-spotify-green/80 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-5 py-3 bg-yellow-500 text-spotify-black rounded-lg font-semibold hover:bg-yellow-500/80 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {mfaProcessing && !verificationId ? 'Sending...' : 'Send verification code'}
             </button>
             <button
               onClick={completeEnrollment}
               disabled={mfaProcessing || !verificationId || smsCode.length < 6}
-              className="px-5 py-3 border border-spotify-green text-spotify-green rounded-lg font-semibold hover:bg-spotify-green/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-5 py-3 border border-yellow-400 text-yellow-400 rounded-lg font-semibold hover:bg-yellow-500/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {mfaProcessing && verificationId ? 'Verifying...' : 'Verify & enable'}
             </button>

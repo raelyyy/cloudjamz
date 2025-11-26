@@ -7,6 +7,10 @@ const PlayingViewPanel = ({
   currentIndex,
   isPlaying,
   onPlaySong,
+  showLyrics,
+  lyrics,
+  lyricsLoading,
+  onNavigate,
 }) => {
   if (!currentSong) {
     return (
@@ -28,7 +32,7 @@ const PlayingViewPanel = ({
   const upcomingSongs = playlist.slice(currentIndex + 1);
 
   return (
-    <div className="w-96 bg-spotify-dark dark:bg-light-dark p-4 flex flex-col h-full">
+    <div className="w-96 bg-spotify-dark dark:bg-light-dark p-4 pb-2 flex flex-col h-full">
       {/* NOW PLAYING */}
       <div className="mb-4 pt-4">
         <h2 className="text-spotify-white dark:text-light-white text-lg font-semibold mb-4">Now Playing</h2>
@@ -38,8 +42,16 @@ const PlayingViewPanel = ({
           <CoverImage size={64} song={currentSong} />
 
           <div className="flex-1 min-w-0">
-            <p className="text-spotify-white dark:text-light-white font-medium truncate">{currentSong.title}</p>
-            <p className="text-spotify-lighter dark:text-light-lighter text-sm truncate">
+            <p
+              className="text-spotify-white dark:text-light-white font-medium truncate cursor-pointer hover:text-yellow-400 transition-colors"
+              onClick={() => onNavigate && onNavigate(`/song/${currentSong.id}`)}
+            >
+              {currentSong.title}
+            </p>
+            <p
+              className="text-spotify-lighter dark:text-light-lighter text-sm truncate cursor-pointer hover:text-yellow-400 transition-colors"
+              onClick={() => onNavigate && onNavigate(`/artist/${encodeURIComponent(currentSong.artist)}`)}
+            >
               {currentSong.artist}
             </p>
             <p className="text-spotify-lighter dark:text-light-lighter text-xs truncate">
@@ -49,38 +61,56 @@ const PlayingViewPanel = ({
 
           <div
             className={`w-3 h-3 rounded-full ${
-              isPlaying ? "bg-green-500" : "bg-gray-500"
+              isPlaying ? "bg-yellow-500" : "bg-gray-500"
             }`}
           ></div>
         </div>
       </div>
 
-      {/* UP NEXT */}
+      {/* UP NEXT OR LYRICS */}
       <div className="flex-1 overflow-hidden">
-        <h3 className="text-spotify-white dark:text-light-white text-md font-semibold mb-3">Up Next</h3>
+        {showLyrics ? (
+          <>
+            <h3 className="text-spotify-white dark:text-light-white text-md font-semibold mb-3">Lyrics</h3>
+            <div className="overflow-y-auto h-full pb-4">
+              {lyricsLoading ? (
+                <p className="text-spotify-lighter dark:text-light-lighter text-sm">Loading lyrics...</p>
+              ) : lyrics ? (
+                <pre className="text-spotify-white dark:text-light-white text-sm whitespace-pre-wrap leading-relaxed">
+                  {lyrics}
+                </pre>
+              ) : (
+                <p className="text-spotify-lighter dark:text-light-lighter text-sm">No lyrics available</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <h3 className="text-spotify-white dark:text-light-white text-md font-semibold mb-3">Up Next</h3>
+            <div className="overflow-y-auto h-full pb-8">
+              {upcomingSongs.length > 0 ? (
+                upcomingSongs.map((song) => (
+                  <div
+                    key={song.id}
+                    className="flex items-center space-x-3 p-2 rounded-md mb-1 hover:bg-spotify-light dark:hover:bg-light-light cursor-pointer"
+                    onClick={() => onPlaySong(song, playlist)}
+                  >
+                    <CoverImage size={40} song={song} />
 
-        <div className="overflow-y-auto h-full">
-          {upcomingSongs.length > 0 ? (
-            upcomingSongs.map((song) => (
-              <div
-                key={song.id}
-                className="flex items-center space-x-3 p-2 rounded-md mb-1 hover:bg-spotify-light dark:hover:bg-light-light cursor-pointer"
-                onClick={() => onPlaySong(song, playlist)}
-              >
-                <CoverImage size={40} song={song} />
-
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate text-spotify-white dark:text-light-white">{song.title}</p>
-                  <p className="text-spotify-lighter dark:text-light-lighter text-xs truncate">
-                    {song.artist}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-spotify-lighter dark:text-light-lighter text-sm">No upcoming songs</p>
-          )}
-        </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate text-spotify-white dark:text-light-white">{song.title}</p>
+                      <p className="text-spotify-lighter dark:text-light-lighter text-xs truncate">
+                        {song.artist}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-spotify-lighter dark:text-light-lighter text-sm">No upcoming songs</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import EditSongModal from "./EditSongModal";
 import { auth } from "../firebase";
+import { useTheme } from "../contexts/ThemeContext";
+import GlareHover from "./GlareHover";
 
 export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, onRemoveFromPlaylist, onEdit, className = '', isPlaying = false, showAddToPlaylist = true, showLikeButton = true, isFavorite = false }) {
-  const navigate = useNavigate();
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef(null);
+   const navigate = useNavigate();
+   const { isDarkMode } = useTheme();
+   const [showMenu, setShowMenu] = useState(false);
+   const menuRef = useRef(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [songToEdit, setSongToEdit] = useState(null);
@@ -119,10 +122,11 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
 
   return (
     <>
-      <div onClick={handleCardClick} className={`bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition cursor-pointer group relative shadow-lg dark:shadow-xl ${isPlaying ? 'ring-2 ring-spotify-green' : ''} ${className || ''}`}>
+      <GlareHover background="transparent" borderColor="transparent" width="100%" height="auto" borderRadius="0.5rem" glareColor={isDarkMode ? '#DAA520' : '#F7E35A'} glareOpacity={0.3} glareAngle={-30} glareSize={300} transitionDuration={1200} playOnce={false}>
+        <div onClick={handleCardClick} className={`bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition cursor-pointer group relative shadow-lg dark:shadow-xl ${isPlaying ? 'ring-2 ring-yellow-300' : ''} ${className || ''}`}>
         <div className="relative mb-4">
           <img
-            src={song.cover || 'invalid'}
+            src={song.cover || '/placeholder-cover.png'}
             alt={song.title}
             className="rounded-lg w-full aspect-square object-cover shadow-lg"
             onError={(e) => {
@@ -138,13 +142,13 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
               e.stopPropagation();
               onPlay(song);
             }}
-            className={`absolute bottom-2 right-2 p-3 bg-spotify-green rounded-full transition-opacity shadow-lg hover:bg-spotify-green/80 ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            className={`absolute bottom-2 right-2 p-3 bg-gradient-to-r from-yellow-200 to-yellow-400 rounded-full transition-opacity shadow-lg hover:from-yellow-300 hover:to-yellow-500 ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause className="w-6 h-6 text-spotify-black" fill="currentColor" />
+              <Pause className="w-6 h-6 text-black" fill="currentColor" />
             ) : (
-              <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
+              <Play className="w-6 h-6 text-black" fill="currentColor" />
             )}
           </button>
           <button
@@ -179,9 +183,9 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
               {showLikeButton && (
                 <button
                   onClick={(e) => handleAction('favorite', e)}
-                  className={`w-full px-4 py-2 text-left hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3 ${isFavorite ? 'text-spotify-green' : 'text-spotify-white dark:text-light-white'}`}
+                  className={`w-full px-4 py-2 text-left hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition flex items-center gap-3 ${isFavorite ? 'text-yellow-500' : 'text-spotify-white dark:text-light-white'}`}
                 >
-                  <Heart className={`w-4 h-4 ${isFavorite ? 'fill-spotify-green text-spotify-green' : ''}`} />
+                  <Heart className={`w-4 h-4 ${isFavorite ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                   {isFavorite ? 'Liked' : 'Add to Favorites'}
                 </button>
               )}
@@ -240,7 +244,8 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         </div>
         <h3 onClick={handleTitleClick} className="text-spotify-white dark:text-light-white font-semibold truncate mb-1 hover:underline cursor-pointer">{song.title}</h3>
         <p onClick={handleArtistClick} className="text-spotify-lighter dark:text-light-lighter text-sm truncate hover:underline cursor-pointer">{song.artist}</p>
-      </div>
+        </div>
+      </GlareHover>
       <EditSongModal
         isOpen={isEditModalOpen}
         onClose={closeEditModal}

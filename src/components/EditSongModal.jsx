@@ -97,7 +97,7 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
         <label className="block mb-2 text-spotify-light dark:text-light-lighter">Title</label>
         <input
           type="text"
-          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-spotify-green"
+          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Song Title"
@@ -105,7 +105,7 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
         <label className="block mb-2 text-spotify-light dark:text-light-lighter">Artist</label>
         <input
           type="text"
-          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-spotify-green"
+          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           value={artist}
           onChange={(e) => setArtist(e.target.value)}
           placeholder="Artist Name"
@@ -113,7 +113,7 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
         <label className="block mb-2 text-spotify-light dark:text-light-lighter">Album</label>
         <input
           type="text"
-          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-spotify-green"
+          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           value={album}
           onChange={(e) => setAlbum(e.target.value)}
           placeholder="Album Name (optional)"
@@ -122,7 +122,7 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
         <input
           type="file"
           accept="image/*"
-          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-spotify-green file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3"
+          className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-yellow-400 file:bg-gradient-to-r file:from-yellow-200 file:to-yellow-400 file:text-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3"
           onChange={handleCoverFileChange}
         />
         {coverPreview && (
@@ -133,17 +133,18 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
         )}
         <div className="flex justify-end gap-4">
           <button
-            onClick={onClose}
-            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition"
-          >
-            Cancel
-          </button>
-          <button
             onClick={handleSave}
-            className="px-4 py-2 rounded bg-spotify-green text-spotify-black font-semibold hover:bg-green-600 transition disabled:opacity-50 disabled:hover:bg-spotify-green"
+            className="px-4 py-2 rounded font-semibold transition disabled:opacity-50"
+            style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)', color: 'black' }}
             disabled={!title.trim() || !artist.trim() || isSaving}
           >
             {isSaving ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
+          >
+            Cancel
           </button>
         </div>
       </div>

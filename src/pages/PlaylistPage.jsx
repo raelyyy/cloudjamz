@@ -350,9 +350,6 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
           </button>
           <div>
             <h1 className="text-4xl font-bold text-spotify-white dark:text-light-white">{playlist.title}</h1>
-            {playlist.description && (
-              <p className="text-spotify-lighter dark:text-light-lighter text-lg mt-2">{playlist.description}</p>
-            )}
             <p className="text-spotify-lighter dark:text-light-lighter mt-1">{playlist.songs.length} songs</p>
           </div>
         </div>
@@ -436,7 +433,7 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
                   placeholder="Playlist name"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   required
                 />
               </div>
@@ -445,17 +442,17 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
                   placeholder="Description (optional)"
                   value={editingDescription}
                   onChange={(e) => setEditingDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green resize-none"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none"
                   rows="3"
                 />
               </div>
               <div>
-                <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
+                <label className="block mb-2 text-spotify-light dark:text-light-lighter">Cover Image (optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setEditingCover(e.target.files[0])}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 hover:file:bg-spotify-green/80"
+                  className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-yellow-400 file:bg-gradient-to-r file:from-yellow-200 file:to-yellow-400 file:text-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3"
                 />
                 {uploadingCover && <p className="text-spotify-lighter dark:text-light-lighter text-sm mt-1">Uploading cover...</p>}
               </div>
@@ -463,7 +460,8 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
                 <button
                   type="submit"
                   disabled={uploadingCover}
-                  className="bg-spotify-green hover:bg-spotify-green/80 disabled:bg-spotify-green/50 text-spotify-black px-4 py-2 rounded transition"
+                  className="px-4 py-2 rounded transition disabled:opacity-50"
+                  style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)', color: 'black' }}
                 >
                   {uploadingCover ? "Updating..." : "Update Playlist"}
                 </button>

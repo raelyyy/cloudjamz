@@ -9,7 +9,8 @@ import {
   Heart,
   MoreHorizontal,
   Music,
-  Plus
+  Plus,
+  MicVocal
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -31,7 +32,10 @@ export default function PlayerBar({
   onLoopToggle,
   onFavoriteToggle,
   isFavorite = false,
-  onAddToPlaylist
+  onAddToPlaylist,
+  showLyrics = false,
+  onToggleLyrics,
+  onNavigate
 }) {
   // 🔥 Track image errors
   const [imgError, setImgError] = useState(false);
@@ -136,13 +140,23 @@ export default function PlayerBar({
             </div>
 
             <div className="min-w-0">
-              <h4 className="text-spotify-white dark:text-light-white font-medium truncate">{currentSong.title}</h4>
-              <p className="text-spotify-lighter dark:text-light-lighter text-sm truncate">{currentSong.artist}</p>
+              <h4
+                className="text-spotify-white dark:text-light-white font-medium truncate cursor-pointer hover:text-yellow-400 transition-colors"
+                onClick={() => onNavigate && onNavigate(`/song/${currentSong.id}`)}
+              >
+                {currentSong.title}
+              </h4>
+              <p
+                className="text-spotify-lighter dark:text-light-lighter text-sm truncate cursor-pointer hover:text-yellow-400 transition-colors"
+                onClick={() => onNavigate && onNavigate(`/artist/${encodeURIComponent(currentSong.artist)}`)}
+              >
+                {currentSong.artist}
+              </p>
             </div>
 
             <button
               onClick={onFavoriteToggle}
-              className={`p-1 transition ${isFavorite ? 'text-spotify-green' : 'hover:text-spotify-green text-spotify-lighter dark:text-light-lighter dark:hover:text-spotify-green'}`}
+              className={`p-1 transition ${isFavorite ? 'text-yellow-500' : 'hover:text-yellow-500 text-spotify-lighter dark:text-light-lighter dark:hover:text-yellow-500'}`}
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
@@ -150,7 +164,7 @@ export default function PlayerBar({
             {onAddToPlaylist && (
               <button
                 onClick={() => onAddToPlaylist(currentSong)}
-                className="p-1 hover:text-spotify-green text-spotify-lighter dark:text-light-lighter dark:hover:text-spotify-green transition"
+                className="p-1 hover:text-yellow-500 text-spotify-lighter dark:text-light-lighter dark:hover:text-yellow-500 transition"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -166,7 +180,7 @@ export default function PlayerBar({
         <div className="flex items-center gap-4">
           <button
             onClick={onShuffleToggle}
-            className={`p-1 transition ${shuffle ? 'text-spotify-green' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
+            className={`p-1 transition ${shuffle ? 'text-yellow-500' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
           >
             <Shuffle className="w-4 h-4" />
           </button>
@@ -188,10 +202,10 @@ export default function PlayerBar({
           </button>
           <button
             onClick={handleLoopClick}
-            className={`p-1 transition relative ${loop !== 'off' ? 'text-spotify-green' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
+            className={`p-1 transition relative ${loop !== 'off' ? 'text-yellow-500' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
           >
             <Repeat className="w-4 h-4" />
-            {loop === 'one' && <span className="absolute -top-1 -right-1 text-xs text-spotify-green font-bold">1</span>}
+            {loop === 'one' && <span className="absolute -top-1 -right-1 text-xs text-yellow-500 font-bold">1</span>}
           </button>
         </div>
 
@@ -199,8 +213,11 @@ export default function PlayerBar({
           <span className="text-xs text-spotify-lighter dark:text-light-lighter">{formatTime(progress)}</span>
           <div onClick={handleProgressClick} className="flex-1 bg-spotify-light dark:bg-light-light rounded-full h-1 cursor-pointer">
             <div
-              className="bg-spotify-white dark:bg-light-white h-1 rounded-full"
-              style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }}
+              className="h-1 rounded-full"
+              style={{
+                width: duration ? `${(progress / duration) * 100}%` : '0%',
+                backgroundImage: 'linear-gradient(to right, #FFD700, #4079FF)'
+              }}
             ></div>
           </div>
           <span className="text-xs text-spotify-lighter dark:text-light-lighter">{formatTime(duration)}</span>
@@ -209,6 +226,12 @@ export default function PlayerBar({
 
       {/* Volume Controls */}
       <div className="flex items-center gap-2 flex-1 justify-end">
+        <button
+          onClick={onToggleLyrics}
+          className={`p-1 transition ${showLyrics ? 'text-yellow-500' : 'hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter'}`}
+        >
+          <MicVocal className="w-4 h-4" />
+        </button>
         <button className="p-1 hover:text-spotify-white dark:hover:text-light-white text-spotify-lighter dark:text-light-lighter transition">
           <MoreHorizontal className="w-4 h-4" />
         </button>

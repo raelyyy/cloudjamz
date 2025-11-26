@@ -8,7 +8,7 @@ export default function RecentlyPlayedCard({ song, onPlay, isPlaying }) {
     >
       {/* Cover or Placeholder */}
       <img
-        src={song.cover || 'invalid'}
+        src={song.cover || '/placeholder-cover.png'}
         alt={song.title}
         className="w-12 h-12 rounded object-cover mr-3"
         onError={(e) => {
@@ -32,12 +32,12 @@ export default function RecentlyPlayedCard({ song, onPlay, isPlaying }) {
           e.stopPropagation();
           onPlay(song);
         }}
-        className={`ml-2 p-2 rounded-full bg-spotify-green hover:bg-spotify-green/80 text-spotify-black transition-opacity opacity-0 group-hover:opacity-100`}
+        className={`ml-2 p-2 rounded-full bg-gradient-to-r from-yellow-200 to-yellow-400 hover:from-yellow-300 hover:to-yellow-500 text-black transition-opacity opacity-0 group-hover:opacity-100`}
       >
         {isPlaying ? (
-          <Pause className="w-4 h-4 text-spotify-black" fill="currentColor" />
+          <Pause className="w-4 h-4 text-black" fill="currentColor" />
         ) : (
-          <Play className="w-4 h-4 text-spotify-black" fill="currentColor" />
+          <Play className="w-4 h-4 text-black" fill="currentColor" />
         )}
       </button>
     </div>

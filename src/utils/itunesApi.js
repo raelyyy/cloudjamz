@@ -140,30 +140,54 @@ export const getItunesRecommendations = async () => {
   }
 };
 
-export const searchItunes = async (query) => {
+export const searchItunes = async (query, entity = 'song') => {
   try {
     const response = await axios.get('https://itunes.apple.com/search', {
       params: {
         term: query,
         media: 'music',
-        entity: 'song',
-        limit: 20,
+        entity: entity,
+        limit: entity === 'musicArtist' ? 10 : 20,
         country: 'us'
       }
     });
 
     if (response.data.results && response.data.results.length > 0) {
-      return response.data.results.map(track => ({
-        id: track.trackId?.toString() || `search-${track.collectionId}`,
-        title: track.trackName || 'Unknown Title',
-        artist: track.artistName || 'Unknown Artist',
-        album: track.collectionName || 'Unknown Album',
-        cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
-        url: track.previewUrl || '',
-        external_url: track.trackViewUrl || '',
-        duration: Math.floor(track.trackTimeMillis / 1000) || 30,
-        genre: track.primaryGenreName || 'Unknown Genre',
-      }));
+      if (entity === 'musicArtist') {
+        return response.data.results.map(artist => ({
+          id: artist.artistId?.toString() || `artist-${artist.artistName}`,
+          type: 'artist',
+          title: artist.artistName || 'Unknown Artist',
+          artist: artist.artistName,
+          cover: artist.artworkUrl100?.replace('100x100', '300x300') || '',
+          external_url: artist.artistLinkUrl || '',
+          genre: artist.primaryGenreName || 'Unknown Genre',
+        }));
+      } else if (entity === 'album') {
+        return response.data.results.map(album => ({
+          id: album.collectionId?.toString() || `album-${album.collectionName}`,
+          type: 'album',
+          title: album.collectionName || 'Unknown Album',
+          artist: album.artistName || 'Unknown Artist',
+          album: album.collectionName,
+          cover: album.artworkUrl100?.replace('100x100', '300x300') || '',
+          external_url: album.collectionViewUrl || '',
+          genre: album.primaryGenreName || 'Unknown Genre',
+        }));
+      } else {
+        return response.data.results.map(track => ({
+          id: track.trackId?.toString() || `search-${track.collectionId}`,
+          type: 'track',
+          title: track.trackName || 'Unknown Title',
+          artist: track.artistName || 'Unknown Artist',
+          album: track.collectionName || 'Unknown Album',
+          cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
+          url: track.previewUrl || '',
+          external_url: track.trackViewUrl || '',
+          duration: Math.floor(track.trackTimeMillis / 1000) || 30,
+          genre: track.primaryGenreName || 'Unknown Genre',
+        }));
+      }
     }
     return [];
   } catch (error) {

@@ -2,11 +2,14 @@ import { Play, MoreHorizontal, Trash2, Share, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { getPlaceholderCover } from "../utils/placeholderCovers";
+import { useTheme } from "../contexts/ThemeContext";
+import GlareHover from "./GlareHover";
 
 export default function PlaylistCard({ playlist, onDelete, onClick, onPlaySong, onEdit }) {
-  const navigate = useNavigate();
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef(null);
+   const navigate = useNavigate();
+   const { isDarkMode } = useTheme();
+   const [showMenu, setShowMenu] = useState(false);
+   const menuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -72,7 +75,8 @@ export default function PlaylistCard({ playlist, onDelete, onClick, onPlaySong, 
   };
 
   return (
-    <div onClick={handleCardClick} className="bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition cursor-pointer group relative">
+    <GlareHover background="transparent" borderColor="transparent" width="100%" height="auto" borderRadius="0.5rem" glareColor={isDarkMode ? '#DAA520' : '#F7E35A'} glareOpacity={0.3} glareAngle={-30} glareSize={300} transitionDuration={1200} playOnce={false}>
+      <div onClick={handleCardClick} className="bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition cursor-pointer group relative shadow-lg dark:shadow-xl">
       <div className="relative mb-4">
         {playlist.cover ? (
           <img
@@ -84,15 +88,15 @@ export default function PlaylistCard({ playlist, onDelete, onClick, onPlaySong, 
             }}
           />
         ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-spotify-green to-spotify-black rounded-tl-lg rounded-tr-lg flex items-center justify-center">
-            <Play className="w-12 h-12 text-spotify-white" />
+          <div className="w-full h-48 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-tl-lg rounded-tr-lg flex items-center justify-center">
+            <Play className="w-12 h-12 text-black" />
           </div>
         )}
         <button
           onClick={handlePlay}
-          className="absolute bottom-2 right-2 p-3 bg-spotify-green rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-spotify-green/80"
+          className="absolute bottom-2 right-2 p-3 bg-gradient-to-r from-yellow-200 to-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:from-yellow-300 hover:to-yellow-500"
         >
-          <Play className="w-6 h-6 text-spotify-black" fill="currentColor" />
+          <Play className="w-6 h-6 text-black" fill="currentColor" />
         </button>
       </div>
       <h3 className="text-spotify-white dark:text-light-white font-semibold truncate mb-1">{playlist.name}</h3>
@@ -132,6 +136,7 @@ export default function PlaylistCard({ playlist, onDelete, onClick, onPlaySong, 
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </GlareHover>
   );
 }

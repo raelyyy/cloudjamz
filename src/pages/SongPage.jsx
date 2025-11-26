@@ -191,7 +191,7 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
           <p className="text-2xl text-spotify-lighter dark:text-light-lighter mb-2">
             <Link
               to={`/artist/${encodeURIComponent(song.artist)}`}
-              className="hover:underline text-spotify-green"
+              className="hover:underline hover:text-yellow-400 transition-colors"
             >
               {song.artist}
             </Link>
@@ -204,7 +204,7 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
           <div className="flex items-center gap-4 mb-4">
             <button
               onClick={() => onPlaySong(song)}
-              className="bg-spotify-green hover:bg-spotify-green/80 text-spotify-black px-8 py-3 rounded-full font-semibold text-lg transition"
+              className="bg-gradient-to-r from-yellow-300 to-yellow-400 hover:from-yellow-400 hover:to-yellow-500 text-black px-8 py-3 rounded-full font-semibold text-lg transition"
             >
               <Play className="w-6 h-6 inline mr-2" fill="currentColor" />
               Play
@@ -214,26 +214,26 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
                 <button
                   onClick={toggleFavorite}
                   className={`p-3 rounded-full transition ${
-                    isFavorite ? 'text-spotify-green bg-spotify-green/20' : 'text-spotify-lighter dark:text-light-lighter hover:text-spotify-green bg-spotify-dark dark:bg-light-dark'
+                    isFavorite ? 'text-yellow-400 bg-yellow-400/20' : 'text-spotify-lighter dark:text-light-lighter hover:text-yellow-400 bg-spotify-dark dark:bg-light-dark'
                   }`}
                 >
                   <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
                 <button
                   onClick={() => onAddToPlaylist?.(song)}
-                  className="p-3 rounded-full text-spotify-lighter dark:text-light-lighter hover:text-spotify-green bg-spotify-dark dark:bg-light-dark transition"
+                  className="p-3 rounded-full text-spotify-lighter dark:text-light-lighter hover:text-yellow-400 bg-spotify-dark dark:bg-light-dark transition"
                 >
                   <Plus className="w-6 h-6" />
                 </button>
                 <button
                   onClick={handleShare}
-                  className="p-3 rounded-full text-spotify-lighter dark:text-light-lighter hover:text-spotify-green bg-spotify-dark dark:bg-light-dark transition"
+                  className="p-3 rounded-full text-spotify-lighter dark:text-light-lighter hover:text-yellow-400 bg-spotify-dark dark:bg-light-dark transition"
                 >
                   <Share className="w-6 h-6" />
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="p-3 rounded-full text-spotify-lighter dark:text-light-lighter hover:text-spotify-green bg-spotify-dark dark:bg-light-dark transition"
+                  className="p-3 rounded-full text-spotify-lighter dark:text-light-lighter hover:text-yellow-400 bg-spotify-dark dark:bg-light-dark transition"
                 >
                   <Download className="w-6 h-6" />
                 </button>

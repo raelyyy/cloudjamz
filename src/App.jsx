@@ -6,10 +6,14 @@ import { Music } from "lucide-react";
 import { auth, db } from "./firebase";
 import { extractMetadata } from "./utils/metadataExtractor";
 import { uploadToCloudinary } from "./utils/cloudinary";
+import { getLyrics } from "./utils/lyricsApi";
+import { searchItunes } from "./utils/itunesApi";
+import { useTheme } from "./contexts/ThemeContext";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import PlayerBar from "./components/PlayerBar";
 import PlayingViewPanel from "./components/PlayingViewPanel";
+import ClickSpark from "./components/ClickSpark";
 import Home from "./pages/Home";
 
 import Login from "./pages/Login";
@@ -29,6 +33,7 @@ import MyMusic from "./pages/MyMusic";
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDarkMode } = useTheme();
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -44,6 +49,9 @@ function AppContent() {
   const [favorites, setFavorites] = useState(new Set());
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [lyrics, setLyrics] = useState(null);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
 
   const [playlists, setPlaylists] = useState([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -51,7 +59,6 @@ function AppContent() {
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
   const [newPlaylistCover, setNewPlaylistCover] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
 
@@ -114,6 +121,29 @@ function AppContent() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPlaying, currentSong]);
+
+  // Fetch lyrics when current song changes
+  useEffect(() => {
+    const fetchLyrics = async () => {
+      if (currentSong && currentSong.artist && currentSong.title) {
+        setLyricsLoading(true);
+        try {
+          const fetchedLyrics = await getLyrics(currentSong.artist, currentSong.title);
+          setLyrics(fetchedLyrics);
+        } catch (error) {
+          console.error('Error fetching lyrics:', error);
+          setLyrics(null);
+        } finally {
+          setLyricsLoading(false);
+        }
+      } else {
+        setLyrics(null);
+        setLyricsLoading(false);
+      }
+    };
+
+    fetchLyrics();
+  }, [currentSong]);
 
   const playSong = async (song, songList = []) => {
     if (song.url) {
@@ -216,13 +246,40 @@ function AppContent() {
     }
   };
 
-  const nextSong = () => {
+  const getRelatedSongs = async (artist) => {
+    try {
+      const results = await searchItunes(artist);
+      // Filter out the current song if it's in the results
+      return results.filter(song => song.title !== currentSong?.title || song.album !== currentSong?.album);
+    } catch (error) {
+      console.error("Error fetching related songs:", error);
+      return [];
+    }
+  };
+
+  const nextSong = async () => {
     if (playlist.length > 0 && currentIndex >= 0) {
       let nextIndex = (currentIndex + 1) % playlist.length;
 
       // Check if we've reached the end and loop is not 'all'
       if (nextIndex === 0 && loop !== 'all') {
-        // End of playlist, stop playback
+        // End of playlist, try to play related songs
+        if (currentSong && currentSong.artist) {
+          try {
+            const relatedSongs = await getRelatedSongs(currentSong.artist);
+            if (relatedSongs.length > 0) {
+              // Set related songs as new playlist
+              setPlaylist(relatedSongs);
+              setOriginalPlaylist(relatedSongs);
+              setCurrentIndex(0);
+              playSong(relatedSongs[0], relatedSongs);
+              return;
+            }
+          } catch (error) {
+            console.error("Error fetching related songs:", error);
+          }
+        }
+        // If no related songs or error, stop playback
         setIsPlaying(false);
         setCurrentSong(null);
         setCurrentIndex(-1);
@@ -423,6 +480,15 @@ function AppContent() {
     setLoop(mode);
   };
 
+  const toggleLyrics = () => {
+    setShowLyrics(!showLyrics);
+  };
+
+  const setCurrentSongPaused = (song) => {
+    setCurrentSong(song);
+    // Don't set isPlaying to true, keep it paused
+  };
+
   const toggleFavorite = async (song) => {
     if (!user) return;
 
@@ -574,7 +640,6 @@ function AppContent() {
 
       const playlistData = {
         name: newPlaylistName.trim(),
-        description: newPlaylistDescription,
         cover: coverUrl,
         userId: user.uid,
         songs: [],
@@ -590,7 +655,6 @@ function AppContent() {
 
       setPlaylists(prev => [...prev, newPlaylist]);
       setNewPlaylistName("");
-      setNewPlaylistDescription("");
       setNewPlaylistCover(null);
       setShowCreatePlaylistModal(false);
     } catch (error) {
@@ -649,8 +713,8 @@ function AppContent() {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-spotify-black dark:bg-light-black">
         <div className="flex items-center mb-4">
-          <Music className="w-12 h-12 text-spotify-green mr-3" />
-          
+          <Music className="w-12 h-12 mr-3" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
+
         </div>
         <h1 className="text-spotify-white dark:text-light-white text-3xl font-bold">CloudJamz</h1>
         <div className="text-spotify-lighter text-3xl font-bold">•••</div>
@@ -663,192 +727,199 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-spotify-black dark:bg-light-black">
-      <audio ref={audioRef} onEnded={handleSongEnd} />
-      <Navbar user={user} onLogin={handleLogin} onLogout={handleLogout} onSearchResult={(result) => {
-        if (result.type === 'track' && result.url) {
-          // Create a song object for local playback
-          const songForPlayback = {
-            id: result.id,
-            title: result.title,
-            artist: result.artist,
-            album: result.album,
-            cover: result.cover,
-            url: result.url,
-            duration: 30, // Preview tracks are 30 seconds
-            userId: null, // Not a user-uploaded song
-            isSpotifyTrack: true
-          };
-          playSong(songForPlayback);
-        } else {
-          // For artists and albums, open in Spotify
-          window.open(result.external_url, '_blank');
-        }
-      }} onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
+    <ClickSpark sparkColor={isDarkMode ? '#DAA520' : '#F7E35A'}>
+      <div className="flex flex-col h-screen bg-spotify-black dark:bg-light-black">
+        <audio ref={audioRef} onEnded={handleSongEnd} />
+        <Navbar user={user} onLogin={handleLogin} onLogout={handleLogout} onSearchResult={(result) => {
+          if (result.type === 'track' && result.url) {
+            // Create a song object for local playback
+            const songForPlayback = {
+              id: result.id,
+              title: result.title,
+              artist: result.artist,
+              album: result.album,
+              cover: result.cover,
+              url: result.url,
+              duration: 30, // Preview tracks are 30 seconds
+              userId: null, // Not a user-uploaded song
+              isSpotifyTrack: true
+            };
+            playSong(songForPlayback);
+          } else if (result.type === 'artist') {
+            // Navigate to artist page
+            navigate(`/artist/${encodeURIComponent(result.artist)}`);
+          } else if (result.type === 'album') {
+            // Navigate to album page
+            navigate(`/album/${encodeURIComponent(result.album)}`);
+          } else {
+            // For others, open external
+            window.open(result.external_url, '_blank');
+          }
+        }} onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
 
-      <div className="flex flex-1 overflow-hidden pt-16">
-        <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} isMobileOpen={isMobileSidebarOpen} onToggleMobile={() => setIsMobileSidebarOpen(false)} />
+        <div className="flex flex-1 overflow-hidden pt-16">
+          <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} isMobileOpen={isMobileSidebarOpen} onToggleMobile={() => setIsMobileSidebarOpen(false)} currentPath={location.pathname} />
 
-        <div className="flex flex-1 overflow-hidden">
-          <Routes className="flex-1">
-            <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} />} />
-            <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
-            <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
-            <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} />} />
-            <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} />} />
-            <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/account-settings" element={<AccountSettingsPage />} />
-            <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-            <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
-          </Routes>
+          <div className="flex flex-1 overflow-hidden">
+            <Routes className="flex-1">
+              <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} onSetCurrentSongPaused={setCurrentSongPaused} />} />
+              <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
+              <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
+              <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} />} />
+              <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} />} />
+              <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/account-settings" element={<AccountSettingsPage />} />
+              <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
+            </Routes>
+          </div>
+
+        {/* Only show PlayingViewPanel if not on settings or account-settings pages and not on small screens */}
+        {location.pathname !== '/settings' && location.pathname !== '/account-settings' && !isSmallScreen && (
+          <PlayingViewPanel
+            currentSong={currentSong}
+            playlist={playlist}
+            currentIndex={currentIndex}
+            isPlaying={isPlaying}
+            onPlaySong={handlePlayFromCard}
+            showLyrics={showLyrics}
+            lyrics={lyrics}
+            lyricsLoading={lyricsLoading}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {/* Playlist Modal */}
+        {showPlaylistModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-full max-w-md">
+              <h3 className="text-spotify-white dark:text-light-white text-lg font-semibold mb-4">Select a Playlist</h3>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {playlists.map((playlist) => (
+                  <button
+                    key={playlist.id}
+                    onClick={() => setSelectedPlaylist(playlist)}
+                    className={`w-full text-left p-3 rounded text-spotify-white dark:text-light-white transition border-2 ${
+                      selectedPlaylist?.id === playlist.id
+                        ? 'border-yellow-300 text-yellow-300 bg-yellow-300/10'
+                        : 'border-gray-600 hover:border-yellow-300/50'
+                    }`}
+                  >
+                    {playlist.name}
+                  </button>
+                ))}
+              </div>
+        <div className="flex gap-4 mt-4 justify-end">
+          <button
+            onClick={() => {
+              if (selectedPlaylist && songToAdd) {
+                handleAddToPlaylist(selectedPlaylist.id);
+              }
+              setShowPlaylistModal(false);
+              setSelectedPlaylist(null);
+            }}
+            disabled={!selectedPlaylist}
+            className="px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)', color: 'black' }}
+          >
+            OK
+          </button>
+          <button
+            onClick={() => {
+              setShowPlaylistModal(false);
+              setSelectedPlaylist(null);
+            }}
+            className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
+          >
+            Cancel
+          </button>
         </div>
-
-      {/* Only show PlayingViewPanel if not on settings or account-settings pages and not on small screens */}
-      {location.pathname !== '/settings' && location.pathname !== '/account-settings' && !isSmallScreen && (
-        <PlayingViewPanel
-          currentSong={currentSong}
-          playlist={playlist}
-          currentIndex={currentIndex}
-          isPlaying={isPlaying}
-          onPlaySong={handlePlayFromCard}
-        />
-      )}
-
-      {/* Playlist Modal */}
-      {showPlaylistModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-96">
-            <h3 className="text-white text-lg font-semibold mb-4">Select a Playlist</h3>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {playlists.map((playlist) => (
-                <button
-                  key={playlist.id}
-                  onClick={() => setSelectedPlaylist(playlist)}
-                  className={`w-full text-left p-3 rounded text-spotify-white dark:text-light-white transition border-2 ${
-                    selectedPlaylist?.id === playlist.id
-                      ? 'border-spotify-green text-spotify-green bg-transparent'
-                      : 'border-gray-600 hover:border-spotify-green/50'
-                  }`}
-                >
-                  {playlist.name}
-                </button>
-              ))}
             </div>
-      <div className="flex gap-4 mt-4 justify-end">
-        <button
-          onClick={() => {
-            if (selectedPlaylist && songToAdd) {
-              handleAddToPlaylist(selectedPlaylist.id);
-            }
-            setShowPlaylistModal(false);
-            setSelectedPlaylist(null);
-          }}
-          disabled={!selectedPlaylist}
-          className="px-4 py-2 bg-spotify-green hover:bg-spotify-green/80 disabled:bg-spotify-green/50 disabled:cursor-not-allowed text-spotify-black rounded transition"
-        >
-          OK
-        </button>
-        <button
-          onClick={() => {
-            setShowPlaylistModal(false);
-            setSelectedPlaylist(null);
-          }}
-          className="px-4 py-2 bg-spotify-light text-white rounded hover:bg-spotify-green/20 transition"
-        >
-          Cancel
-        </button>
-      </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Create Playlist Modal */}
-      {showCreatePlaylistModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold text-spotify-white dark:text-light-white mb-4">Create New Playlist</h2>
-            <form onSubmit={createPlaylist} className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  placeholder="Playlist name"
-                  value={newPlaylistName}
-                  onChange={(e) => setNewPlaylistName(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
-                  required
-                />
-              </div>
-              <div>
-                <textarea
-                  placeholder="Description (optional)"
-                  value={newPlaylistDescription}
-                  onChange={(e) => setNewPlaylistDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green resize-none"
-                  rows="3"
-                />
-              </div>
-              <div>
-                <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setNewPlaylistCover(e.target.files[0])}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-spotify-green transition"
-                />
-              </div>
-              <div className="flex gap-4">
-                <button
-                  type="submit"
-                  disabled={uploadingCover}
-                  className="bg-spotify-green hover:bg-spotify-green/80 text-spotify-black px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploadingCover ? "Uploading..." : "Create Playlist"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreatePlaylistModal(false);
-                    setNewPlaylistName("");
-                    setNewPlaylistDescription("");
-                    setNewPlaylistCover(null);
-                  }}
-                  className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+        {/* Create Playlist Modal */}
+        {showCreatePlaylistModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-spotify-dark dark:bg-light-dark p-6 rounded-lg w-full max-w-md mx-4">
+              <h2 className="text-xl font-semibold text-spotify-white dark:text-light-white mb-4">Create New Playlist</h2>
+              <form onSubmit={createPlaylist} className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Playlist name"
+                    value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setNewPlaylistCover(e.target.files[0])}
+                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-gradient-to-r file:from-[#F7E35A] file:to-[#DAA520] file:text-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-spotify-green transition"
+                  />
+                </div>
+                <div className="flex justify-end gap-4 mt-4">
+                  <button
+                    type="submit"
+                    disabled={uploadingCover}
+                    className="px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)', color: 'black' }}
+                  >
+                    {uploadingCover ? "Uploading..." : "Create Playlist"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreatePlaylistModal(false);
+                      setNewPlaylistName("");
+                      setNewPlaylistCover(null);
+                    }}
+                    className="px-4 py-2 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white rounded hover:border-spotify-white dark:hover:border-light-white transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
+        )}
         </div>
-      )}
-      </div>
 
-      <PlayerBar
-        currentSong={currentSong}
-        isPlaying={isPlaying}
-        volume={volume}
-        progress={progress}
-        duration={duration}
-        onTogglePlayPause={togglePlayPause}
-        onNext={nextSong}
-        onPrev={prevSong}
-        onSeek={seekTo}
-        onVolumeChange={setVolume}
-        formatTime={formatTime}
-        shuffle={shuffle}
-        loop={loop}
-        onShuffleToggle={toggleShuffle}
-        onLoopToggle={toggleLoop}
-        onFavoriteToggle={() => currentSong && toggleFavorite(currentSong)}
-        isFavorite={currentSong && favorites.has(currentSong.id)}
-        onAddToPlaylist={addToPlaylist}
-      />
-    </div>
+        <PlayerBar
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          volume={volume}
+          progress={progress}
+          duration={duration}
+          onTogglePlayPause={togglePlayPause}
+          onNext={nextSong}
+          onPrev={prevSong}
+          onSeek={seekTo}
+          onVolumeChange={setVolume}
+          formatTime={formatTime}
+          shuffle={shuffle}
+          loop={loop}
+          onShuffleToggle={toggleShuffle}
+          onLoopToggle={toggleLoop}
+          onFavoriteToggle={() => currentSong && toggleFavorite(currentSong)}
+          isFavorite={currentSong && favorites.has(currentSong.id)}
+          onAddToPlaylist={addToPlaylist}
+          showLyrics={showLyrics}
+          onToggleLyrics={toggleLyrics}
+          onNavigate={handleNavigate}
+        />
+      </div>
+    </ClickSpark>
   );
 }
 

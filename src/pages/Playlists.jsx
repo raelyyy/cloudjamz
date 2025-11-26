@@ -5,6 +5,7 @@ import { db } from "../firebase";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import PlaylistCard from "../components/PlaylistCard";
 import MusicCard from "../components/MusicCard";
+import { Plus } from "lucide-react";
 
 export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
   const navigate = useNavigate();
@@ -213,9 +214,11 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
         <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white">Your Playlists</h1>
         <button
           onClick={onCreatePlaylist}
-          className="bg-spotify-green hover:bg-spotify-green/80 text-spotify-black px-4 py-2 rounded transition"
+          className="px-4 py-2 rounded transition flex items-center gap-2"
+          style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)' }}
         >
-          Create Playlist
+          <Plus className="w-4 h-4" style={{ color: 'black' }} />
+          <span style={{ color: 'black' }}>Create Playlist</span>
         </button>
       </div>
 
@@ -232,7 +235,7 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
                   placeholder="Playlist name"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   required
                 />
               </div>
@@ -241,17 +244,17 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
                   placeholder="Description (optional)"
                   value={newPlaylistDescription}
                   onChange={(e) => setNewPlaylistDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green resize-none"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none"
                   rows="3"
                 />
               </div>
               <div>
-                <label className="block text-spotify-lighter dark:text-light-lighter text-sm mb-2">Cover Image (optional)</label>
+                <label className="block mb-2 text-spotify-light dark:text-light-lighter">Cover Image (optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setNewPlaylistCover(e.target.files[0])}
-                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-spotify-green file:text-spotify-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 hover:file:bg-spotify-green/80"
+                  className="w-full p-2 mb-4 rounded bg-spotify-light/10 dark:bg-light-light/10 border border-spotify-light dark:border-light-light text-spotify-white dark:text-light-white focus:outline-none focus:ring-2 focus:ring-yellow-400 file:bg-gradient-to-r file:from-yellow-200 file:to-yellow-400 file:text-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3"
                 />
                 {uploadingCover && <p className="text-spotify-lighter dark:text-light-lighter text-sm mt-1">Uploading cover...</p>}
               </div>
@@ -259,7 +262,8 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
                 <button
                   type="submit"
                   disabled={uploadingCover}
-                  className="bg-spotify-green hover:bg-spotify-green/80 disabled:bg-spotify-green/50 text-spotify-black px-4 py-2 rounded transition"
+                  className="px-4 py-2 rounded transition disabled:opacity-50"
+                  style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)', color: 'black' }}
                 >
                   {uploadingCover ? (showEditModal ? "Updating..." : "Creating...") : (showEditModal ? "Update Playlist" : "Create Playlist")}
                 </button>

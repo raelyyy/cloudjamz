@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   GoogleAuthProvider,
   PhoneAuthProvider,
@@ -6,15 +6,27 @@ import {
   RecaptchaVerifier,
   createUserWithEmailAndPassword,
   getMultiFactorResolver,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   updateProfile
 } from "firebase/auth";
-import { Music } from "lucide-react";
+import { Eye, EyeOff, Music } from "lucide-react";
 import { auth } from "../firebase";
+import LiquidEther from "../components/LiquidEther";
 
 export default function Auth({ onLogin }) {
+  const colors = useMemo(() => [
+  '#FFEDEE', // very light red
+  '#FFF1E0', // pale orange
+  '#FFF5CC', // soft yellow-orange
+  '#FFF9B3', // light golden yellow
+  '#FFFF99'  // creamy yellow
+], []);
+
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -163,58 +175,145 @@ export default function Auth({ onLogin }) {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setError("Password reset email sent! Check your inbox.");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-spotify-black flex items-center justify-center p-4">
-      <div className="bg-spotify-dark rounded-lg p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ position: 'relative' }}>
+      <LiquidEther
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: -1
+        }}
+        colors={colors}
+        mouseForce={20}
+        cursorSize={100}
+        isViscous={false}
+        viscous={30}
+        iterationsViscous={32}
+        iterationsPoisson={32}
+        resolution={0.5}
+        isBounce={false}
+        autoDemo={true}
+        autoSpeed={0.5}
+        autoIntensity={2.2}
+        takeoverDuration={0.25}
+        autoResumeDelay={3000}
+        autoRampDuration={0.6}
+      />
+      <div className="bg-spotify-dark/80 backdrop-blur-lg rounded-lg p-8 w-full max-w-md" style={{ position: 'relative', zIndex: 1 }}>
         <div className="flex items-center justify-center mb-6">
-          <Music className="w-12 h-12 text-spotify-green mr-3" />
+          <Music className="w-12 h-12 text-yellow-400 mr-3" />
         </div>
         <h1 className="text-3xl font-bold text-spotify-white text-center mb-2">
-          {isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
+          {isForgotPassword ? "Reset Password" : isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
         </h1>
-        <p className="text-spotify-lighter text-center mb-8">Discover. Stream. Repeat.</p>
+        <p className="text-spotify-lighter text-center mb-8">
+          {isForgotPassword ? "Enter your email to receive a reset link" : "Discover. Stream. Repeat."}
+        </p>
 
-        {error && <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>}
+        {error && <div className={`p-3 rounded mb-4 ${error.includes('sent') ? 'bg-green-500' : 'bg-red-500'} text-white`}>{error}</div>}
 
-        <form onSubmit={handleEmailAuth}>
-          {isSignUp && (
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Display Name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
-                required
-              />
-            </div>
+        <form onSubmit={isForgotPassword ? handleForgotPassword : handleEmailAuth}>
+          {isForgotPassword ? (
+            <>
+              <div className="mb-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-yellow-500 hover:bg-yellow-500/80 text-spotify-black font-semibold py-3 px-4 rounded transition"
+              >
+                Send Reset Email
+              </button>
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => setIsForgotPassword(false)}
+                  className="text-yellow-400 hover:underline"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {isSignUp && (
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Display Name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                    required
+                  />
+                </div>
+              )}
+              <div className="mb-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                  required
+                />
+              </div>
+              <div className="mb-4 relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-spotify-lighter hover:text-spotify-white"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {!isSignUp && (
+                <div className="text-right mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-yellow-400 hover:underline text-sm"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-yellow-300 text-spotify-black font-semibold py-3 px-4 rounded transition"
+              >
+                {isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
+              </button>
+            </>
           )}
-          <div className="mb-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
-              required
-            />
-          </div>
-          <div className="mb-6">
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-spotify-green hover:bg-spotify-green/80 text-spotify-black font-semibold py-3 px-4 rounded transition"
-          >
-            {isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
-          </button>
         </form>
 
         <div className="text-center text-spotify-lighter my-4">or</div>
@@ -222,7 +321,7 @@ export default function Auth({ onLogin }) {
         <div className="space-y-4">
           <button
             onClick={handleGoogleLogin}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded transition flex items-center justify-center"
+            className="w-full px-5 py-3 border border-spotify-light rounded text-white hover:border-spotify-white transition flex items-center justify-center"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -248,15 +347,18 @@ export default function Auth({ onLogin }) {
 
         <div className="text-center mt-6">
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-spotify-green hover:underline"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setIsForgotPassword(false);
+            }}
+            className="text-yellow-400 hover:underline"
           >
             {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}
           </button>
         </div>
 
         {mfaResolver && (
-          <div className="mt-8 border border-spotify-green/60 rounded-lg p-4 bg-spotify-black/60">
+          <div className="mt-8 border border-yellow-400/60 rounded-lg p-4 bg-spotify-black/60">
             <h2 className="text-xl font-semibold text-white mb-3">Two-Factor Verification</h2>
             <p className="text-spotify-lighter text-sm mb-4">
               Use your trusted phone number to finish signing in.
@@ -269,7 +371,7 @@ export default function Auth({ onLogin }) {
                 <select
                   value={selectedHintUid}
                   onChange={(e) => setSelectedHintUid(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white focus:outline-none focus:border-spotify-green"
+                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white focus:outline-none focus:border-yellow-400"
                 >
                   {mfaResolver.hints.map((hint) => (
                     <option key={hint.uid} value={hint.uid}>
@@ -285,7 +387,7 @@ export default function Auth({ onLogin }) {
                 type="button"
                 onClick={handleSendMfaCode}
                 disabled={isSendingCode}
-                className="w-full bg-spotify-green hover:bg-spotify-green/80 text-spotify-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-yellow-500 hover:bg-yellow-500/80 text-spotify-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSendingCode ? "Sending code..." : "Send verification code"}
               </button>
@@ -303,14 +405,14 @@ export default function Auth({ onLogin }) {
                     onChange={(e) => setMfaCode(e.target.value)}
                     placeholder="6-digit code"
                     maxLength={6}
-                    className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-spotify-green"
+                    className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
                   />
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     type="submit"
                     disabled={isVerifyingCode || mfaCode.length < 6}
-                    className="flex-1 bg-spotify-green hover:bg-spotify-green/80 text-spotify-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-500/80 text-spotify-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isVerifyingCode ? "Verifying..." : "Verify & Sign in"}
                   </button>

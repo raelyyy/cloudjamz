@@ -3,8 +3,10 @@ import { collection, getDocs, query, where, limit, orderBy, addDoc, deleteDoc } 
 import { Search } from "lucide-react";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function SearchPage({ onPlaySong, user }) {
+  const { isDarkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [recentSearches, setRecentSearches] = useState([]);
@@ -116,7 +118,7 @@ export default function SearchPage({ onPlaySong, user }) {
           placeholder="What do you want to listen to?"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-2xl pl-12 pr-4 py-3 rounded-full bg-spotify-white text-spotify-black placeholder-spotify-light focus:outline-none focus:ring-2 focus:ring-spotify-green"
+          className={`w-full max-w-2xl pl-12 pr-4 py-3 rounded-full bg-spotify-white text-spotify-black placeholder-spotify-light focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-[#DAA520]' : 'focus:ring-[#F7E35A]'}`}
         />
       </div>
 

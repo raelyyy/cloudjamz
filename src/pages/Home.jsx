@@ -5,15 +5,19 @@ import { db } from "../firebase";
 import { getItunesRecommendations } from "../utils/itunesApi";
 import MusicCard from "../components/MusicCard";
 import RecentlyPlayedCard from "../components/RecentlyPlayedCard";
+import TextType from "../components/TextType";
+import SpotlightCard from "../components/SpotlightCard";
+import { Music } from "lucide-react";
+import heroBg from "../assets/hero_bg.png";
 
-export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist }) {
-  const navigate = useNavigate();
+export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused }) {
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
+  const navigate = useNavigate();
   const [recentSongs, setRecentSongs] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [myMusic, setMyMusic] = useState([]);
@@ -21,6 +25,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   const [suggestedPlaylists, setSuggestedPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editLoading, setEditLoading] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     // Fetch Spotify recommendations on mount
@@ -45,6 +50,9 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           const shuffledTracks = formattedTracks.sort(() => Math.random() - 0.5);
           console.log('Formatted tracks:', shuffledTracks);
           setSpotifyRecommendations(shuffledTracks);
+
+          // Set a random song as current if none is playing
+          // This will be overridden if user has recently played songs
         } else {
           console.log('No recommendations received');
           setSpotifyRecommendations([]);
@@ -192,6 +200,11 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
         recentlyPlayedSongs.push({ id: doc.id, ...data.songData });
       });
       setRecentlyPlayed(recentlyPlayedSongs);
+
+      // Set the most recent song as current if none is playing
+      if (!currentSong && recentlyPlayedSongs.length > 0) {
+        onSetCurrentSongPaused(recentlyPlayedSongs[0]);
+      }
     }, (error) => {
       console.warn("Firestore access denied for recently played, using empty list:", error.message);
       setRecentlyPlayed([]);
@@ -254,6 +267,10 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     };
   }, [user]);
 
+  useEffect(() => {
+    setImgError(false);
+  }, [currentSong]);
+
   const handleEditMySong = async (updatedSong) => {
     if (!updatedSong) return;
     const documentId = updatedSong.docId || updatedSong.id;
@@ -300,12 +317,95 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
   return (
     <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-      <section className="hero bg-gradient-to-r from-green-400 to-transparent p-8 rounded-lg mb-8">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-spotify-white dark:text-light-white mb-4">
-          {getGreeting()}{user ? `, ${user.displayName}` : ''}
-        </h1>
-        <p className="text-spotify-white dark:text-light-lighter text-base md:text-lg">Discover your favorite music</p>
-      </section>
+      <SpotlightCard className="hero bg-gradient-to-r from-yellow-300 to-yellow-500 px-8 rounded-lg mb-8 flex flex-col md:flex-row items-center justify-between relative" spotlightColor="rgba(255, 255, 255, 0.2)">
+        <div className="absolute top-4 left-8 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-montserrat font-semibold px-3 py-1 rounded-full shadow-lg">
+          ✨ New
+        </div>
+        <div className="flex-1 mb-4 md:mb-0">
+          <div className="bg-white text-[#0019FF] px-3 py-1 rounded-md font-montserrat font-semibold text-sm inline-block mb-2">
+            {getGreeting()}
+          </div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#001AFF] mb-4 font-montserrat leading-tight">
+            Welcome back,
+          </h1>
+          <TextType
+            text={[user ? user.displayName : 'Guest'] + '!'}
+            typingSpeed={150}
+            pauseDuration={1500}
+            showCursor={true}
+            cursorCharacter="_"
+            className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#001AFF] font-montserrat leading-tight mb-4"
+          />
+          <p className="text-black text-xs md:text-sm mb-4 font-montserrat">Stream millions of songs, discover new artists, and create the perfect playlist for every mood.</p>
+          <div className="flex gap-4 mb-4">
+            <button
+              onClick={() => {
+                if (spotifyRecommendations.length > 0) {
+                  onPlaySong(spotifyRecommendations[0], spotifyRecommendations);
+                }
+              }}
+              className="bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-l hover:from-pink-500 hover:to-red-500 text-white px-8 py-3 rounded-lg font-montserrat hover:scale-105 transition-all duration-300"
+            >
+              Play Now
+            </button>
+            <button
+              onClick={() => {
+                navigate('/liked');
+              }}
+              className="bg-black/20 text-black p-3 rounded-lg hover:scale-105 transition-all duration-300"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="#FF0039" viewBox="0 0 20 20">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'CloudJamz',
+                    text: 'Check out this awesome music app!',
+                    url: window.location.href,
+                  });
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Link copied to clipboard!');
+                }
+              }}
+              className="bg-black/20 text-black p-3 rounded-lg hover:scale-105 transition-all duration-300"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="#FF0039" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <img src={heroBg} alt="Hero Background" className="w-80 h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] xl:w-[32rem] xl:h-[32rem] object-cover rounded-lg" />
+        </div>
+        <div className="absolute bottom-4 left-8 flex items-center gap-3">
+          <div className={`relative w-10 h-10 md:w-12 md:h-12 rounded-lg shadow-lg ${isPlaying ? 'animate-pulse' : ''}`}>
+            {!imgError && (currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : null)) ? (
+              <img
+                src={currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : '/placeholder-cover.png')}
+                alt="Now Playing Cover"
+                className="w-full h-full rounded-lg object-cover"
+                onError={() => setImgError(true)}
+              />
+            ) : null}
+            {(imgError || !(currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : null))) && (
+              <div className="w-full h-full rounded-lg bg-black/20 flex items-center justify-center">
+                <Music className="w-6 h-6 md:w-8 md:h-8 text-black" />
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-black text-xs font-montserrat font-semibold">Now Playing</p>
+            <p className="text-black text-xs font-montserrat">
+              {currentSong ? `${currentSong.title} by ${currentSong.artist}` : (spotifyRecommendations.length > 0 ? `${spotifyRecommendations[0].title} by ${spotifyRecommendations[0].artist}` : 'Loading...')}
+            </p>
+          </div>
+        </div>
+      </SpotlightCard>
 
       {loading ? (
         <div className="text-spotify-lighter dark:text-light-lighter">Loading...</div>
@@ -331,7 +431,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
             <section className="mb-8">
               <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">My Music</h2>
               <div id="my-music-scroll" className="overflow-x-auto overflow-y-visible pb-4 -mx-2">
-                <div className="flex gap-4 px-2 scroll-smooth snap-x snap-mandatory">
+                <div className="flex gap-4 px-2 pt-4 scroll-smooth snap-x snap-mandatory">
                   {myMusic.map((song) => (
                     <div key={song.docId || song.id} className="flex-shrink-0 w-44 sm:w-48 snap-start">
                       <MusicCard
