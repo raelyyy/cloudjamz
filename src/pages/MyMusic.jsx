@@ -3,7 +3,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/f
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
 
-export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist, onDeleteSong, currentSong, isPlaying }) {
+export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist, onDeleteSong, currentSong, isPlaying, onUpdateCurrentSong }) {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,6 +79,11 @@ export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist,
           return song;
         })
       );
+
+      // Update currentSong if it's the edited song
+      if (currentSong && updatedSong.id === currentSong.id) {
+        onUpdateCurrentSong(updatedSong);
+      }
 
       setEditMessage({ type: 'success', text: 'Song updated successfully.' });
     } catch (error) {

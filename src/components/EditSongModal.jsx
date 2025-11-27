@@ -59,12 +59,16 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
 
       let finalCoverUrl = currentCoverUrl;
       if (coverFile) {
-        const uploadResult = await uploadToCloudinary(
-          coverFile,
-          `covers/${song.userId || 'shared'}`
-        );
-        finalCoverUrl = uploadResult.url;
-        setCurrentCoverUrl(finalCoverUrl);
+        try {
+          const uploadResult = await uploadToCloudinary(coverFile);
+          finalCoverUrl = uploadResult.url;
+          setCurrentCoverUrl(finalCoverUrl);
+        } catch (uploadError) {
+          console.error('Failed to upload cover:', uploadError);
+          setError('Cover upload failed. Please try again.');
+          setIsSaving(false);
+          return;
+        }
       }
 
       const updatedSong = {
@@ -77,9 +81,9 @@ export default function EditSongModal({ isOpen, onClose, song, onSave }) {
 
       onSave(updatedSong);
       onClose();
-    } catch (uploadError) {
-      console.error('Failed to upload cover:', uploadError);
-      setError('Cover upload failed. Please try again.');
+    } catch (error) {
+      console.error('Failed to save:', error);
+      setError('Failed to save. Please try again.');
     } finally {
       setIsSaving(false);
     }

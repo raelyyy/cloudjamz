@@ -332,7 +332,7 @@ export default function AccountSettingsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-yellow-500 hover:bg-yellow-500/80 disabled:opacity-50 disabled:cursor-not-allowed text-spotify-black font-medium py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-yellow-500/80 disabled:opacity-50 disabled:cursor-not-allowed text-spotify-black font-medium py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
             >
               <Save className="w-5 h-5" />
               {saving ? 'Saving...' : 'Save Changes'}
@@ -420,7 +420,7 @@ export default function AccountSettingsPage() {
             <button
               onClick={sendEnrollmentCode}
               disabled={mfaProcessing || !phoneNumber}
-              className="px-5 py-3 bg-yellow-500 text-spotify-black rounded-lg font-semibold hover:bg-yellow-500/80 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-5 py-3 bg-gradient-to-r from-yellow-300 to-yellow-500 text-spotify-black rounded-lg font-semibold hover:bg-yellow-500/80 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {mfaProcessing && !verificationId ? 'Sending...' : 'Send verification code'}
             </button>

@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 // Cloudinary upload function using direct upload to avoid Node.js modules in browser
-export const uploadToCloudinary = async (file, folder = 'songs') => {
-  const cloudName = 'diap7m2zq'; // Hardcoded for now
-  const uploadPreset = 'cloudjamz'; // Hardcoded for now
+export const uploadToCloudinary = async (file) => {
+   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'diap7m2zq';
+   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'cloudjamz';
 
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', uploadPreset);
-  formData.append('folder', folder);
+  // formData.append('folder', folder); // Commented out to upload to root
   formData.append('resource_type', 'auto');
 
   // Remove format and quality parameters for unsigned uploads

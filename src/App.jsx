@@ -9,6 +9,8 @@ import { uploadToCloudinary } from "./utils/cloudinary";
 import { getLyrics } from "./utils/lyricsApi";
 import { searchItunes } from "./utils/itunesApi";
 import { useTheme } from "./contexts/ThemeContext";
+import Snowfall from 'react-snowfall';
+import snowflakePng from './assets/snowflake.png';
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import PlayerBar from "./components/PlayerBar";
@@ -29,6 +31,7 @@ import TrashPage from "./pages/TrashPage";
 import PlaylistPage from "./pages/PlaylistPage";
 import LikedSongs from "./pages/LikedSongs";
 import MyMusic from "./pages/MyMusic";
+import AboutDevs from "./pages/AboutDevs";
 
 function AppContent() {
   const navigate = useNavigate();
@@ -144,6 +147,7 @@ function AppContent() {
 
     fetchLyrics();
   }, [currentSong]);
+
 
   const playSong = async (song, songList = []) => {
     if (song.url) {
@@ -348,7 +352,7 @@ function AppContent() {
           const metadata = await extractMetadata(file);
 
           // Upload file to Cloudinary
-          const uploadResult = await uploadToCloudinary(file, `songs/${user.uid}`);
+          const uploadResult = await uploadToCloudinary(file);
 
           // Upload cover to Cloudinary if available
           let coverUrl = null;
@@ -358,7 +362,7 @@ function AppContent() {
               const coverResponse = await fetch(metadata.cover);
               const coverBlob = await coverResponse.blob();
               const coverFile = new File([coverBlob], 'cover.jpg', { type: 'image/jpeg' });
-              const coverUploadResult = await uploadToCloudinary(coverFile, `covers/${user.uid}`);
+              const coverUploadResult = await uploadToCloudinary(coverFile);
               coverUrl = coverUploadResult.url;
             } catch (error) {
               console.warn('Failed to upload cover image:', error);
@@ -379,6 +383,7 @@ function AppContent() {
             userId: user.uid,
             cloudinaryPublicId: uploadResult.publicId,
             isUploaded: true,
+            createdAt: new Date(),
           };
 
           // Save to Firestore
@@ -584,7 +589,7 @@ function AppContent() {
     if (!file) return null;
     setUploadingCover(true);
     try {
-      const result = await uploadToCloudinary(file, `playlist-covers/${user.uid}`);
+      const result = await uploadToCloudinary(file);
       return result.url;
     } catch (error) {
       console.error("Error uploading cover:", error);
@@ -762,19 +767,20 @@ function AppContent() {
 
           <div className="flex flex-1 overflow-hidden">
             <Routes className="flex-1">
-              <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} onSetCurrentSongPaused={setCurrentSongPaused} />} />
+              <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} onSetCurrentSongPaused={setCurrentSongPaused} onUpdateCurrentSong={setCurrentSong} />} />
               <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
               <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
               <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} />} />
               <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} />} />
               <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
-              <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onUpdateCurrentSong={setCurrentSong} />} />
               <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
               <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
               <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/account-settings" element={<AccountSettingsPage />} />
               <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/about-devs" element={<AboutDevs />} />
               <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
             </Routes>
           </div>
@@ -855,7 +861,7 @@ function AppContent() {
                     placeholder="Playlist name"
                     value={newPlaylistName}
                     onChange={(e) => setNewPlaylistName(e.target.value)}
-                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-spotify-green"
+                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-yellow-400 "
                     required
                   />
                 </div>
@@ -865,7 +871,7 @@ function AppContent() {
                     type="file"
                     accept="image/*"
                     onChange={(e) => setNewPlaylistCover(e.target.files[0])}
-                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-gradient-to-r file:from-[#F7E35A] file:to-[#DAA520] file:text-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-spotify-green transition"
+                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white file:bg-gradient-to-r file:from-[#F7E35A] file:to-[#DAA520] file:text-black file:border-none file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer hover:border-yellow-400 transition"
                   />
                 </div>
                 <div className="flex justify-end gap-4 mt-4">
@@ -924,9 +930,20 @@ function AppContent() {
 }
 
 export default function App() {
+  const [snowflakeImages, setSnowflakeImages] = useState([]);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = snowflakePng;
+    setSnowflakeImages([img]);
+  }, []);
+
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      <Snowfall images={snowflakeImages} snowflakeCount={200} size={[40, 80]} style={{ position: 'fixed', width: '100vw', height: '100vh', zIndex: -1 }} />
+      <Router>
+        <AppContent />
+      </Router>
+    </>
   );
 }

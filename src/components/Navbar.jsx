@@ -1,9 +1,9 @@
-import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu, Sun, Moon } from "lucide-react";
+import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu, Sun, Moon, CodeXml } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { searchItunes } from "../utils/itunesApi";
 import { useTheme } from "../contexts/ThemeContext";
-import GradientText from "./GradientText";
+import ScrambledText from "./ScrambledText";
 
 export default function Navbar({ user, onLogin, onLogout, onSearchResult, onToggleMobileSidebar }) {
    const navigate = useNavigate();
@@ -16,7 +16,6 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
    const searchRef = useRef(null);
    const profileRef = useRef(null);
 
-   const logoColors = isDarkMode ? ["#DAA520", "#F7E35A", "#DAA520", "#F7E35A", "#DAA520"] : ["#FFD700", "#F7E35A", "#FFD700", "#F7E35A", "#FFD700"];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,17 +94,18 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
       </button>
 
       {/* Logo */}
-      <div className="flex items-center">
+      <Link to="/" className="flex items-center">
         <Music className="w-8 h-8 mr-2" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
-        <GradientText
-          colors={logoColors}
-          animationSpeed={5}
-          showBorder={false}
+        <ScrambledText
           className="text-xl font-black hidden sm:block"
+          scrambleChars=".:"
+          radius={50}
+          duration={0.8}
+          speed={0.3}
         >
           CloudJamz
-        </GradientText>
-      </div>
+        </ScrambledText>
+      </Link>
 
       {/* Search */}
       <div className="flex-1 max-w-2xl mx-2 md:mx-6 relative" ref={searchRef}>
@@ -165,6 +165,15 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
 
       {/* User Actions */}
       <div className="flex items-center gap-2">
+        {/* About Devs Button */}
+        <button
+          onClick={() => navigate('/about-devs')}
+          className="p-3 rounded-full bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light dark:hover:bg-light-light transition"
+          title="About Developers"
+        >
+          <CodeXml className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
+        </button>
+
         {user ? (
           <>
             {/* Theme Toggle Button */}

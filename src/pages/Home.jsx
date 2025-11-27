@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, limit, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, limit, orderBy, onSnapshot, doc, updateDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { getItunesRecommendations } from "../utils/itunesApi";
 import MusicCard from "../components/MusicCard";
 import RecentlyPlayedCard from "../components/RecentlyPlayedCard";
 import TextType from "../components/TextType";
 import SpotlightCard from "../components/SpotlightCard";
+import CurvedLoop from "../components/CurvedLoop";
 import { Music } from "lucide-react";
 import heroBg from "../assets/hero_bg.png";
 
-export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused }) {
+export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused, onUpdateCurrentSong }) {
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -18,7 +19,6 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     return 'Good evening';
   };
   const navigate = useNavigate();
-  const [recentSongs, setRecentSongs] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [myMusic, setMyMusic] = useState([]);
   const [spotifyRecommendations, setSpotifyRecommendations] = useState([]);
@@ -210,34 +210,12 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
       setRecentlyPlayed([]);
     });
 
-    // Real-time listener for user's recent songs
-    const recentQuery = query(
-      collection(db, "songs"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(6)
-    );
-
-    const unsubscribeRecent = onSnapshot(recentQuery, (snapshot) => {
-      const recent = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        recent.push({
-          ...data,
-          id: data.id ?? doc.id,
-          docId: doc.id,
-        });
-      });
-      setRecentSongs(recent);
-    }, (error) => {
-      console.warn("Firestore access denied for recent songs, using empty list:", error.message);
-      setRecentSongs([]);
-    });
 
     // Real-time listener for user's music
     const myMusicQuery = query(
       collection(db, "songs"),
       where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
       limit(12)
     );
 
@@ -262,7 +240,6 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     // Cleanup listeners on unmount
     return () => {
       unsubscribeRecentlyPlayed();
-      unsubscribeRecent();
       unsubscribeMyMusic();
     };
   }, [user]);
@@ -305,7 +282,18 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
         });
 
       setMyMusic((prev) => applyUpdate(prev));
-      setRecentSongs((prev) => applyUpdate(prev));
+
+      // Update recentlyPlayed documents in Firestore
+      const recentlyPlayedQuery = query(collection(db, "recentlyPlayed"), where("songId", "==", updatedSong.id));
+      const recentlyPlayedSnapshot = await getDocs(recentlyPlayedQuery);
+      recentlyPlayedSnapshot.forEach(async (doc) => {
+        await updateDoc(doc.ref, { songData: updatedSong });
+      });
+
+      // Update currentSong if it's the edited song
+      if (currentSong && updatedSong.id === currentSong.id) {
+        onUpdateCurrentSong(updatedSong);
+      }
     } catch (error) {
       console.error("Failed to update song:", error);
     } finally {
@@ -318,8 +306,8 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   return (
     <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
       <SpotlightCard className="hero bg-gradient-to-r from-yellow-300 to-yellow-500 px-8 rounded-lg mb-8 flex flex-col md:flex-row items-center justify-between relative" spotlightColor="rgba(255, 255, 255, 0.2)">
-        <div className="absolute top-4 left-8 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-montserrat font-semibold px-3 py-1 rounded-full shadow-lg">
-          ✨ New
+        <div className="absolute -top-8 left-0 w-full z-0">
+          <CurvedLoop marqueeText="Harmony ✦ Pulse ✦ Echo ✦ Rhythm ✦ Wave ✦" curveAmount={0} />
         </div>
         <div className="flex-1 mb-4 md:mb-0">
           <div className="bg-white text-[#0019FF] px-3 py-1 rounded-md font-montserrat font-semibold text-sm inline-block mb-2">
@@ -336,7 +324,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
             cursorCharacter="_"
             className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#001AFF] font-montserrat leading-tight mb-4"
           />
-          <p className="text-black text-xs md:text-sm mb-4 font-montserrat">Stream millions of songs, discover new artists, and create the perfect playlist for every mood.</p>
+          <p className="text-black text-xs md:text-sm mb-4 font-montserrat">Stream millions of songs, discover new artists, and create the playlist for every mood.</p>
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => {
@@ -379,7 +367,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
             </button>
           </div>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 relative z-10">
           <img src={heroBg} alt="Hero Background" className="w-80 h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] xl:w-[32rem] xl:h-[32rem] object-cover rounded-lg" />
         </div>
         <div className="absolute bottom-4 left-8 flex items-center gap-3">
@@ -400,7 +388,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           </div>
           <div>
             <p className="text-black text-xs font-montserrat font-semibold">Now Playing</p>
-            <p className="text-black text-xs font-montserrat">
+            <p className="text-black text-xs font-montserrat font-medium">
               {currentSong ? `${currentSong.title} by ${currentSong.artist}` : (spotifyRecommendations.length > 0 ? `${spotifyRecommendations[0].title} by ${spotifyRecommendations[0].artist}` : 'Loading...')}
             </p>
           </div>
@@ -456,16 +444,6 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
             </section>
           )}
 
-          {recentSongs.length > 0 && (
-            <section className="mb-8">
-              <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Recently Added</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {recentSongs.map((song) => (
-                  <MusicCard key={song.id} song={song} onPlay={() => onPlaySong(song, recentSongs)} onFavorite={user ? () => {} : undefined} onAddToPlaylist={user ? () => {} : undefined} onDelete={onDelete} isPlaying={song.id === currentSong?.id && isPlaying} isFavorite={false} />
-                ))}
-              </div>
-            </section>
-          )}
 
           <section className="mb-8 pt-4">
             <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Suggested Music</h2>

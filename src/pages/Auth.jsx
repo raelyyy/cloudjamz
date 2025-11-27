@@ -17,12 +17,12 @@ import LiquidEther from "../components/LiquidEther";
 
 export default function Auth({ onLogin }) {
   const colors = useMemo(() => [
-  '#FFEDEE', // very light red
-  '#FFF1E0', // pale orange
-  '#FFF5CC', // soft yellow-orange
-  '#FFF9B3', // light golden yellow
-  '#FFFF99'  // creamy yellow
-], []);
+    '#FFEDEE', // very light red
+    '#FFF1E0', // pale orange
+    '#FFF5CC', // soft yellow-orange
+    '#FFF9B3', // light golden yellow
+    '#FFFF99'  // creamy yellow
+  ], []);
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -213,14 +213,17 @@ export default function Auth({ onLogin }) {
         autoResumeDelay={3000}
         autoRampDuration={0.6}
       />
-      <div className="bg-spotify-dark/80 backdrop-blur-lg rounded-lg p-8 w-full max-w-md" style={{ position: 'relative', zIndex: 1 }}>
+      <div
+        className="bg-spotify-black/80 dark:bg-light-dark/80 backdrop-blur-lg rounded-lg p-8 w-full max-w-md shadow-xl border border-gray-500/30 dark:border-gray-400/30"
+        style={{ position: 'relative', zIndex: 1 }}
+      >
         <div className="flex items-center justify-center mb-6">
           <Music className="w-12 h-12 text-yellow-400 mr-3" />
         </div>
-        <h1 className="text-3xl font-bold text-spotify-white text-center mb-2">
+        <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white text-center mb-2">
           {isForgotPassword ? "Reset Password" : isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
         </h1>
-        <p className="text-spotify-lighter text-center mb-8">
+        <p className="text-spotify-lighter dark:text-light-lighter text-center mb-8">
           {isForgotPassword ? "Enter your email to receive a reset link" : "Discover. Stream. Repeat."}
         </p>
 
@@ -235,20 +238,20 @@ export default function Auth({ onLogin }) {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-yellow-400"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-yellow-500 hover:bg-yellow-500/80 text-spotify-black font-semibold py-3 px-4 rounded transition"
+                className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-yellow-300 text-spotify-white dark:text-light-black font-semibold py-3 px-4 rounded transition"
               >
                 Send Reset Email
               </button>
               <div className="text-center mt-4">
                 <button
                   onClick={() => setIsForgotPassword(false)}
-                  className="text-yellow-400 hover:underline"
+                  className="text-yellow-600 hover:underline"
                 >
                   Back to Login
                 </button>
@@ -263,7 +266,7 @@ export default function Auth({ onLogin }) {
                     placeholder="Display Name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-yellow-400"
                     required
                   />
                 </div>
@@ -274,7 +277,7 @@ export default function Auth({ onLogin }) {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-yellow-400"
                   required
                 />
               </div>
@@ -284,13 +287,13 @@ export default function Auth({ onLogin }) {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                  className="w-full px-3 py-2 pr-10 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-yellow-400"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-spotify-lighter hover:text-spotify-white"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -300,46 +303,28 @@ export default function Auth({ onLogin }) {
                   <button
                     type="button"
                     onClick={() => setIsForgotPassword(true)}
-                    className="text-yellow-400 hover:underline text-sm"
+                    className="text-spotify-lighter dark:text-light-lighter hover:underline text-sm"
                   >
                     Forgot Password?
                   </button>
                 </div>
               )}
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-yellow-300 text-spotify-black font-semibold py-3 px-4 rounded transition"
-              >
-                {isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
-              </button>
+              <button type="submit" className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-yellow-300 text-spotify-black dark:text-light-black font-semibold py-3 px-4 rounded transition" 
+              > {isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"} </button>
+
             </>
           )}
         </form>
 
-        <div className="text-center text-spotify-lighter my-4">or</div>
+        <div className="text-center text-spotify-lighter dark:text-light-lighter my-4">or</div>
 
         <div className="space-y-4">
           <button
             onClick={handleGoogleLogin}
-            className="w-full px-5 py-3 border border-spotify-light rounded text-white hover:border-spotify-white transition flex items-center justify-center"
+            className="w-full px-5 py-3 border border-gray-400 rounded text-spotify-white dark:text-light-white hover:border-gray-500 transition flex items-center justify-center"
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="#ffffff"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#ffffff"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#ffffff"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#ffffff"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
+            <svg className="w-5 h-5 mr-2" x="0px" y="0px" width="100" height="100" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
             </svg>
             Continue with Google
           </button>
@@ -351,27 +336,27 @@ export default function Auth({ onLogin }) {
               setIsSignUp(!isSignUp);
               setIsForgotPassword(false);
             }}
-            className="text-yellow-400 hover:underline"
+            className="text-yellow-600 hover:underline"
           >
             {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}
           </button>
         </div>
 
         {mfaResolver && (
-          <div className="mt-8 border border-yellow-400/60 rounded-lg p-4 bg-spotify-black/60">
-            <h2 className="text-xl font-semibold text-white mb-3">Two-Factor Verification</h2>
-            <p className="text-spotify-lighter text-sm mb-4">
+          <div className="mt-8 border border-yellow-400/60 rounded-lg p-4 bg-spotify-black/60 dark:bg-light-black/60">
+            <h2 className="text-xl font-semibold text-spotify-white dark:text-light-white mb-3">Two-Factor Verification</h2>
+            <p className="text-spotify-lighter dark:text-light-lighter text-sm mb-4">
               Use your trusted phone number to finish signing in.
             </p>
             {mfaResolver.hints.length > 1 && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-spotify-lighter mb-2">
+                <label className="block text-sm font-medium text-spotify-lighter dark:text-light-lighter mb-2">
                   Phone number
                 </label>
                 <select
                   value={selectedHintUid}
                   onChange={(e) => setSelectedHintUid(e.target.value)}
-                  className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white focus:outline-none focus:border-yellow-400"
+                  className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white focus:outline-none focus:border-yellow-400"
                 >
                   {mfaResolver.hints.map((hint) => (
                     <option key={hint.uid} value={hint.uid}>
@@ -387,7 +372,7 @@ export default function Auth({ onLogin }) {
                 type="button"
                 onClick={handleSendMfaCode}
                 disabled={isSendingCode}
-                className="w-full bg-yellow-500 hover:bg-yellow-500/80 text-spotify-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-yellow-500 hover:bg-yellow-500/80 text-spotify-white dark:text-light-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSendingCode ? "Sending code..." : "Send verification code"}
               </button>
@@ -396,7 +381,7 @@ export default function Auth({ onLogin }) {
             {verificationId && (
               <form onSubmit={handleVerifyMfaCode} className="space-y-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium text-spotify-lighter mb-2">
+                  <label className="block text-sm font-medium text-spotify-lighter dark:text-light-lighter mb-2">
                     SMS code
                   </label>
                   <input
@@ -405,21 +390,21 @@ export default function Auth({ onLogin }) {
                     onChange={(e) => setMfaCode(e.target.value)}
                     placeholder="6-digit code"
                     maxLength={6}
-                    className="w-full px-3 py-2 bg-spotify-black border border-spotify-light rounded text-spotify-white placeholder-spotify-lighter focus:outline-none focus:border-yellow-400"
+                    className="w-full px-3 py-2 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white placeholder-spotify-lighter dark:placeholder-light-lighter focus:outline-none focus:border-yellow-400"
                   />
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     type="submit"
                     disabled={isVerifyingCode || mfaCode.length < 6}
-                    className="flex-1 bg-yellow-500 hover:bg-yellow-500/80 text-spotify-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-500/80 text-spotify-white dark:text-light-black font-semibold py-3 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isVerifyingCode ? "Verifying..." : "Verify & Sign in"}
                   </button>
                   <button
                     type="button"
                     onClick={resetMfaFlow}
-                    className="px-4 py-3 border border-spotify-light rounded text-white hover:border-spotify-white transition"
+                    className="px-4 py-3 border border-spotify-light dark:border-light-light rounded text-spotify-white dark:text-light-white hover:border-spotify-white dark:hover:border-light-white transition"
                   >
                     Cancel
                   </button>
