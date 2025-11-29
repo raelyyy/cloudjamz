@@ -5,7 +5,7 @@ import { useTheme } from "../contexts/ThemeContext";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, setTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [privacy, setPrivacy] = useState('public');
 
@@ -43,7 +43,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-3">
               <button
-                onClick={toggleTheme}
+                onClick={() => setTheme('light')}
                 className={`w-full p-4 rounded-lg border transition flex items-center gap-3 ${
                   !isDarkMode
                     ? 'border-spotify-green bg-spotify-green/10'
@@ -57,7 +57,7 @@ export default function SettingsPage() {
                 </div>
               </button>
               <button
-                onClick={toggleTheme}
+                onClick={() => setTheme('dark')}
                 className={`w-full p-4 rounded-lg border transition flex items-center gap-3 ${
                   isDarkMode
                     ? 'border-spotify-green bg-spotify-green/10'
