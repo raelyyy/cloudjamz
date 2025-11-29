@@ -170,12 +170,38 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
   };
 
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = song.url;
-    link.download = `${song.title} - ${song.artist}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Fetch the file as blob to set custom filename
+    fetch(song.url)
+      .then(response => {
+        const contentType = response.headers.get('content-type');
+        return response.blob().then(blob => ({ blob, contentType }));
+      })
+      .then(({ blob, contentType }) => {
+        let extension = '';
+        if (contentType) {
+          if (contentType.includes('audio/mpeg')) extension = '.mp3';
+          else if (contentType.includes('audio/mp4') || contentType.includes('audio/aac')) extension = '.m4a';
+          else if (contentType.includes('audio/')) extension = '.mp3'; // fallback
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${song.title} - ${song.artist}${extension}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        console.error('Download failed:', error);
+        // Fallback to original method
+        const link = document.createElement('a');
+        link.href = song.url;
+        link.download = `${song.title} - ${song.artist}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
   };
 
   if (loading) {

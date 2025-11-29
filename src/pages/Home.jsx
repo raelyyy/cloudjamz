@@ -15,7 +15,7 @@ import PlayingAnimationOverlay from "../components/PlayingAnimationOverlay";
 import { Music } from "lucide-react";
 import heroBg from "../assets/hero_bg.png";
 
-export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused, onUpdateCurrentSong }) {
+export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused, onUpdateCurrentSong, onEdit }) {
    const getGreeting = () => {
      const hour = new Date().getHours();
      if (hour < 12) return 'Good morning';
@@ -28,7 +28,6 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   const [spotifyRecommendations, setSpotifyRecommendations] = useState([]);
   const [suggestedPlaylists, setSuggestedPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editLoading, setEditLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [topSongs] = useState([
     { id: '1', title: 'Die With a Smile', artist: 'Lady Gaga & Bruno Mars', cover: 'https://i.scdn.co/image/ab67616d0000b27382ea2e9e1858aa012c57cd45' },
@@ -402,58 +401,6 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     }
   };
 
-  const handleEditMySong = async (updatedSong) => {
-    if (!updatedSong) return;
-    const documentId = updatedSong.docId || updatedSong.id;
-    if (!documentId) {
-      console.error("Missing song document id for update");
-      return;
-    }
-
-    try {
-      setEditLoading(true);
-      const songRef = doc(db, "songs", documentId);
-      await updateDoc(songRef, {
-        title: updatedSong.title,
-        artist: updatedSong.artist,
-        cover: updatedSong.cover,
-        album: updatedSong.album || '',
-      });
-
-      const applyUpdate = (list) =>
-        list.map((song) => {
-          const songDocId = song.docId || song.id;
-          if (songDocId === documentId) {
-            return {
-              ...song,
-              title: updatedSong.title,
-              artist: updatedSong.artist,
-              cover: updatedSong.cover,
-              album: updatedSong.album || '',
-            };
-          }
-          return song;
-        });
-
-      setMyMusic((prev) => applyUpdate(prev));
-
-      // Update recentlyPlayed documents in Firestore
-      const recentlyPlayedQuery = query(collection(db, "recentlyPlayed"), where("songId", "==", updatedSong.id));
-      const recentlyPlayedSnapshot = await getDocs(recentlyPlayedQuery);
-      recentlyPlayedSnapshot.forEach(async (doc) => {
-        await updateDoc(doc.ref, { songData: updatedSong });
-      });
-
-      // Update currentSong if it's the edited song
-      if (currentSong && updatedSong.id === currentSong.id) {
-        onUpdateCurrentSong(updatedSong);
-      }
-    } catch (error) {
-      console.error("Failed to update song:", error);
-    } finally {
-      setEditLoading(false);
-    }
-  };
 
   // Removed handlePlaySpotifyTrack as Spotify tracks will now play directly like uploaded music
 
@@ -660,11 +607,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                           onFavorite={onFavorite}
                           onAddToPlaylist={onAddToPlaylist}
                           onDelete={onDelete}
-                          onEdit={(updatedSong) => {
-                            if (!editLoading) {
-                              handleEditMySong(updatedSong);
-                            }
-                          }}
+                          onEdit={onEdit}
                           isPlaying={song.id === currentSong?.id && isPlaying}
                           isFavorite={favorites.has(song.id)}
                         />

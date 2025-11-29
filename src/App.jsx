@@ -18,6 +18,7 @@ import PlayingViewPanel from "./components/PlayingViewPanel";
 import ClickSpark from "./components/ClickSpark";
 import LoadingSpinner from "./components/LoadingSpinner";
 import LoadingModal from "./components/LoadingModal";
+import EditSongModal from "./components/EditSongModal";
 import Chatbot from "./components/Chatbot";
 import Home from "./pages/Home";
 
@@ -72,6 +73,9 @@ function AppContent() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [showLoadingModal, setShowLoadingModal] = useState(false);
   const [loadingModalMessage, setLoadingModalMessage] = useState("");
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [songToEdit, setSongToEdit] = useState(null);
 
   const audioRef = useRef(null);
 
@@ -896,6 +900,42 @@ function AppContent() {
     }
   };
 
+  const openEditModal = (song) => {
+    setSongToEdit(song);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setSongToEdit(null);
+  };
+
+  const handleEditSong = async (updatedSong) => {
+    try {
+      const documentId = updatedSong.docId || updatedSong.id;
+      if (!documentId) {
+        console.error("Missing song document id for update");
+        return;
+      }
+      const songRef = doc(db, "songs", documentId);
+      await updateDoc(songRef, {
+        title: updatedSong.title,
+        artist: updatedSong.artist,
+        cover: updatedSong.cover,
+        album: updatedSong.album || '',
+      });
+
+      // Update currentSong if it's the edited song
+      if (currentSong && updatedSong.id === currentSong.id) {
+        setCurrentSong(updatedSong);
+      }
+
+      closeEditModal();
+    } catch (error) {
+      console.error("Failed to update song:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-spotify-black dark:bg-light-black">
@@ -968,15 +1008,15 @@ function AppContent() {
 
           <div className="flex flex-1 overflow-hidden">
             <Routes className="flex-1">
-              <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} onSetCurrentSongPaused={setCurrentSongPaused} onUpdateCurrentSong={setCurrentSong} />} />
+              <Route path="/" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onFavorite={toggleFavorite} favorites={favorites} onAddToPlaylist={addToPlaylist} onSetCurrentSongPaused={setCurrentSongPaused} onUpdateCurrentSong={setCurrentSong} onEdit={openEditModal} />} />
               <Route path="/login" element={<Login onLogin={() => navigate('/')} />} />
               <Route path="/auth" element={<Auth onLogin={() => navigate('/')} />} />
               <Route path="/playlists" element={<Playlists user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} />} />
-              <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} />} />
-              <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} />} />
-              <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onUpdateCurrentSong={setCurrentSong} />} />
+              <Route path="/playlist/:id" element={<PlaylistPage onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} favorites={favorites} onFavorite={toggleFavorite} onRemoveFromPlaylist={handleRemoveFromPlaylist} onEdit={openEditModal} />} />
+              <Route path="/liked" element={<LikedSongs user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} currentSong={currentSong} isPlaying={isPlaying} onEdit={openEditModal} />} />
+              <Route path="/my-music" element={<MyMusic user={user} onPlaySong={handlePlayFromCard} onFavorite={toggleFavorite} onAddToPlaylist={addToPlaylist} onDeleteSong={deleteSong} currentSong={currentSong} isPlaying={isPlaying} onUpdateCurrentSong={setCurrentSong} onEdit={openEditModal} />} />
               <Route path="/artist/:name" element={<ArtistPage artistName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
-              <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/album/:name" element={<AlbumPage albumName={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} onEdit={openEditModal} />} />
               <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/account-settings" element={<AccountSettingsPage />} />
@@ -1101,6 +1141,14 @@ function AppContent() {
             </div>
           </div>
         )}
+
+        {/* Edit Song Modal */}
+        <EditSongModal
+          isOpen={isEditModalOpen}
+          onClose={closeEditModal}
+          song={songToEdit}
+          onSave={handleEditSong}
+        />
         </div>
 
         {/* Loading Modal */}

@@ -1,7 +1,6 @@
 import { Play, Pause, MoreHorizontal, Heart, Plus, Share, Download, Trash2, Music, RotateCcw, X, Edit2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import EditSongModal from "./EditSongModal";
 import { auth } from "../firebase";
 import { useTheme } from "../contexts/ThemeContext";
 import GlareHover from "./GlareHover";
@@ -12,9 +11,6 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
    const { isDarkMode } = useTheme();
    const [showMenu, setShowMenu] = useState(false);
    const menuRef = useRef(null);
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [songToEdit, setSongToEdit] = useState(null);
 
   const handleMenuClick = (e) => {
     e.stopPropagation();
@@ -67,19 +63,6 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
     navigate(`/song/${song.id}`);
   };
 
-  const openEditModal = (song) => {
-    setSongToEdit(song);
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setSongToEdit(null);
-  };
-
-  const handleSaveEdit = (updatedSong) => {
-    onEdit?.(updatedSong);
-  };
 
   const handleAction = (action, e) => {
     e.stopPropagation();
@@ -94,7 +77,7 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         break;
       case 'edit':
         if (canEditSong) {
-          openEditModal(song);
+          onEdit?.(song);
         }
         break;
       case 'share':
@@ -110,13 +93,38 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         break;
       case 'download':
         {
-          // Create a temporary link to download the song
-          const link = document.createElement('a');
-          link.href = song.url;
-          link.download = `${song.title} - ${song.artist}.mp3`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          // Fetch the file as blob to set custom filename
+          fetch(song.url)
+            .then(response => {
+              const contentType = response.headers.get('content-type');
+              return response.blob().then(blob => ({ blob, contentType }));
+            })
+            .then(({ blob, contentType }) => {
+              let extension = '';
+              if (contentType) {
+                if (contentType.includes('audio/mpeg')) extension = '.mp3';
+                else if (contentType.includes('audio/mp4') || contentType.includes('audio/aac')) extension = '.m4a';
+                else if (contentType.includes('audio/')) extension = '.mp3'; // fallback
+              }
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `${song.title} - ${song.artist}${extension}`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+              console.error('Download failed:', error);
+              // Fallback to original method
+              const link = document.createElement('a');
+              link.href = song.url;
+              link.download = `${song.title} - ${song.artist}`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            });
         }
         break;
       case 'delete':
@@ -266,12 +274,6 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
         </p>
         </div>
       </GlareHover>
-      <EditSongModal
-        isOpen={isEditModalOpen}
-        onClose={closeEditModal}
-        song={songToEdit}
-        onSave={handleSaveEdit}
-      />
     </>
   );
 }

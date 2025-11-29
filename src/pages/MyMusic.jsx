@@ -4,12 +4,10 @@ import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
 import SkeletonCard from "../components/SkeletonCard";
 
-export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist, onDeleteSong, currentSong, isPlaying, onUpdateCurrentSong }) {
+export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist, onDeleteSong, currentSong, isPlaying, onUpdateCurrentSong, onEdit }) {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [editLoading, setEditLoading] = useState(false);
-  const [editMessage, setEditMessage] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -45,57 +43,6 @@ export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist,
     return () => unsubscribe();
   }, [user]);
 
-  // Add onEdit handler to update song document in Firestore
-  const onEdit = async (updatedSong) => {
-    try {
-      const documentId = updatedSong.docId || updatedSong.id;
-      if (!documentId) {
-        console.error("Missing song document id for update");
-        return;
-      }
-      setEditLoading(true);
-      setEditMessage(null);
-
-      const songRef = doc(db, "songs", documentId);
-      await updateDoc(songRef, {
-        title: updatedSong.title,
-        artist: updatedSong.artist,
-        cover: updatedSong.cover,
-        album: updatedSong.album || '',
-      });
-
-      setSongs((prevSongs) =>
-        prevSongs.map((song) => {
-          const songDocId = song.docId || song.id;
-          const updatedDocId = updatedSong.docId || updatedSong.id;
-          if (songDocId === updatedDocId) {
-            return {
-              ...song,
-              title: updatedSong.title,
-              artist: updatedSong.artist,
-              cover: updatedSong.cover,
-              album: updatedSong.album || '',
-            };
-          }
-          return song;
-        })
-      );
-
-      // Update currentSong if it's the edited song
-      if (currentSong && updatedSong.id === currentSong.id) {
-        onUpdateCurrentSong(updatedSong);
-      }
-
-      setEditMessage({ type: 'success', text: 'Song updated successfully.' });
-    } catch (error) {
-      console.error("Failed to update song:", error);
-      setEditMessage({ type: 'error', text: 'Failed to update song. Please try again.' });
-    } finally {
-      setEditLoading(false);
-      // Clear message after few seconds
-      setTimeout(() => setEditMessage(null), 4000);
-    }
-  };
 
   if (!user) {
     return (
@@ -110,16 +57,6 @@ export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist,
   return (
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
       <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white mb-8">My Music</h1>
-      {editMessage && (
-        <div
-          className={`mb-4 p-3 rounded ${
-            editMessage.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-          }`}
-          role="alert"
-        >
-          {editMessage.text}
-        </div>
-      )}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {Array.from({ length: 10 }, (_, i) => (
@@ -136,11 +73,7 @@ export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist,
               onFavorite={onFavorite}
               onAddToPlaylist={onAddToPlaylist}
               onDelete={onDeleteSong ? () => onDeleteSong(song) : undefined}
-              onEdit={(updatedSong) => {
-                if (!editLoading) {
-                  onEdit(updatedSong);
-                }
-              }}
+              onEdit={onEdit}
               isPlaying={song.id === currentSong?.id && isPlaying}
               isFavorite={false} // We'll handle favorites separately if needed
             />
