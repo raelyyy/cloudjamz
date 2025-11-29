@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
 
 export default function AlbumPage({ albumName, onPlaySong }) {
   const [songs, setSongs] = useState([]);
@@ -30,7 +31,15 @@ export default function AlbumPage({ albumName, onPlaySong }) {
   if (loading) {
     return (
       <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading album...</div>
+        <div className="mb-8">
+          <div className="h-8 bg-spotify-light dark:bg-light-light rounded mb-2 animate-pulse"></div>
+          <div className="h-4 bg-spotify-light dark:bg-light-light rounded w-1/4 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       </main>
     );
   }

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { collection, addDoc, query, where, getDocs, deleteDoc, updateDoc, doc, getDoc, onSnapshot } from "firebase/firestore";
-import { Music } from "lucide-react";
+import { AudioWaveform } from "lucide-react";
 import { auth, db } from "./firebase";
 import { extractMetadata } from "./utils/metadataExtractor";
 import { uploadToCloudinary } from "./utils/cloudinary";
@@ -16,6 +16,9 @@ import Sidebar from "./components/Sidebar";
 import PlayerBar from "./components/PlayerBar";
 import PlayingViewPanel from "./components/PlayingViewPanel";
 import ClickSpark from "./components/ClickSpark";
+import LoadingSpinner from "./components/LoadingSpinner";
+import LoadingModal from "./components/LoadingModal";
+import Chatbot from "./components/Chatbot";
 import Home from "./pages/Home";
 
 import Login from "./pages/Login";
@@ -55,6 +58,9 @@ function AppContent() {
   const [showLyrics, setShowLyrics] = useState(false);
   const [lyrics, setLyrics] = useState(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isPlayingViewVisible, setIsPlayingViewVisible] = useState(true);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const [playlists, setPlaylists] = useState([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -64,6 +70,8 @@ function AppContent() {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistCover, setNewPlaylistCover] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [loadingModalMessage, setLoadingModalMessage] = useState("");
 
   const audioRef = useRef(null);
 
@@ -194,8 +202,11 @@ function AppContent() {
         audioRef.current.src = song.url;
         audioRef.current.load(); // Load the audio first
         audioRef.current.play().catch(error => {
-          console.error("Error playing audio:", error);
-          setIsPlaying(false);
+          // Ignore AbortError as it's expected when changing songs
+          if (error.name !== 'AbortError') {
+            console.error("Error playing audio:", error);
+            // Keep isPlaying as true so the panel remains visible
+          }
         });
       }
     }
@@ -277,7 +288,7 @@ function AppContent() {
               setOriginalPlaylist(relatedSongs);
               setCurrentIndex(0);
               playSong(relatedSongs[0], relatedSongs);
-              return;
+              return true;
             }
           } catch (error) {
             console.error("Error fetching related songs:", error);
@@ -291,21 +302,52 @@ function AppContent() {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
         }
-        return;
+        return false;
       }
 
       const nextSong = playlist[nextIndex];
-      setCurrentIndex(nextIndex);
-      playSong(nextSong, playlist);
+      // Check if the next song has a valid URL
+      if (nextSong && nextSong.url) {
+        setCurrentIndex(nextIndex);
+        playSong(nextSong, playlist);
+        return true;
+      } else {
+        // If the next song doesn't have a URL, try to find one that does
+        let validIndex = -1;
+        for (let i = 1; i < playlist.length; i++) {
+          const checkIndex = (nextIndex + i) % playlist.length;
+          if (playlist[checkIndex] && playlist[checkIndex].url) {
+            validIndex = checkIndex;
+            break;
+          }
+        }
+
+        if (validIndex !== -1) {
+          setCurrentIndex(validIndex);
+          playSong(playlist[validIndex], playlist);
+          return true;
+        } else {
+          // No valid songs found, stop playback
+          setIsPlaying(false);
+          setCurrentSong(null);
+          setCurrentIndex(-1);
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          return false;
+        }
+      }
     } else {
       // No playlist, stop playback
       setIsPlaying(false);
       setCurrentSong(null);
       setCurrentIndex(-1);
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
       }
+      return false;
     }
   };
 
@@ -329,27 +371,71 @@ function AppContent() {
 
     // Supported audio formats for HTML5 audio
     const supportedFormats = [
-      'audio/mpeg', // MP3
-      'audio/mp3',  // MP3
-      'audio/aac',  // AAC
-      'audio/ogg',  // OGG
-      'audio/webm', // WebM
-      'audio/wav',  // WAV
-      'audio/wave', // WAV
-      'audio/flac'  // FLAC (limited browser support)
+      'audio/mpeg',  // MP3
+      'audio/mp3',   // MP3
+      'audio/aac',   // AAC
+      'audio/ogg',   // OGG
+      'audio/webm',  // WebM
+      'audio/wav',   // WAV
+      'audio/wave',  // WAV
+      'audio/flac',  // FLAC
+      'audio/mp4',   // M4A / MP4
+      'audio/x-m4a', // M4A alternative MIME type
+      'audio/aiff',  // AIFF
+      'audio/x-aiff',// AIFF alternative
+      'audio/matroska', // MKV audio-only
+      'audio/opus'   // Opus
     ];
 
-    for (const file of Array.from(files)) {
-      if (file.type.startsWith('audio/')) {
-        // Check if format is supported
-        if (!supportedFormats.includes(file.type.toLowerCase())) {
-          alert(`Unsupported audio format: ${file.type}. Please use MP3, AAC, OGG, WebM, or WAV files.`);
-          continue;
-        }
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Uploading songs...");
 
-        try {
+    try {
+      for (const file of Array.from(files)) {
+        if (file.type.startsWith('audio/')) {
+          // Check if format is supported
+          if (!supportedFormats.includes(file.type.toLowerCase())) {
+            alert(`Unsupported audio format: ${file.type}. Please use MP3, AAC, OGG, WebM, or WAV files.`);
+            continue;
+          }
+
+          setLoadingModalMessage(`Processing ${file.name}...`);
+
           // Extract metadata
           const metadata = await extractMetadata(file);
+
+          // Check for duplicate song names and handle numbering
+          let finalTitle = metadata.title || file.name.replace(/\.[^/.]+$/, ""); // Remove extension if no title
+
+          // Query existing songs by this user
+          const existingSongsQuery = query(collection(db, "songs"), where("userId", "==", user.uid));
+          const existingSongsSnapshot = await getDocs(existingSongsQuery);
+          const existingTitles = existingSongsSnapshot.docs.map(doc => doc.data().title);
+
+          // Find duplicates and determine the next number
+          const baseTitle = finalTitle.replace(/\s*\(\d+\)$/, ""); // Remove existing numbering
+          const duplicates = existingTitles.filter(title =>
+            title === baseTitle || title.startsWith(baseTitle + " (")
+          );
+
+          if (duplicates.length > 0) {
+            // Find the highest number used among numbered duplicates
+            let maxNumber = 0;
+            duplicates.forEach(title => {
+              const match = title.match(/\((\d+)\)$/);
+              if (match) {
+                const num = parseInt(match[1]);
+                if (num > maxNumber) maxNumber = num;
+              }
+            });
+
+            // Always increment from the highest number found
+            // If only the base title exists (no numbered versions), start from (1)
+            // If numbered versions exist, increment the highest
+            finalTitle = baseTitle + ` (${maxNumber + 1})`;
+          }
+
+          setLoadingModalMessage(`Uploading ${finalTitle}...`);
 
           // Upload file to Cloudinary
           const uploadResult = await uploadToCloudinary(file);
@@ -358,6 +444,7 @@ function AppContent() {
           let coverUrl = null;
           if (metadata.cover) {
             try {
+              setLoadingModalMessage(`Uploading cover for ${finalTitle}...`);
               // Convert blob URL to File object for upload
               const coverResponse = await fetch(metadata.cover);
               const coverBlob = await coverResponse.blob();
@@ -370,9 +457,11 @@ function AppContent() {
             }
           }
 
+          setLoadingModalMessage(`Saving ${finalTitle}...`);
+
           const newSong = {
             id: Date.now() + Math.random(),
-            title: metadata.title,
+            title: finalTitle,
             artist: metadata.artist,
             album: metadata.album,
             year: metadata.year,
@@ -388,13 +477,15 @@ function AppContent() {
 
           // Save to Firestore
           await addDoc(collection(db, "songs"), newSong);
-        } catch (error) {
-          console.error("Upload failed:", error);
-          alert("Upload failed. Check console for details.");
+        } else {
+          alert("Please select audio files only.");
         }
-      } else {
-        alert("Please select audio files only.");
       }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Upload failed. Check console for details.");
+    } finally {
+      setShowLoadingModal(false);
     }
   };
 
@@ -418,6 +509,82 @@ function AppContent() {
       querySnapshot.forEach(async (doc) => {
         await deleteDoc(doc.ref);
       });
+
+      // Remove from recently played
+      const recentlyPlayedQuery = query(
+        collection(db, "recentlyPlayed"),
+        where("userId", "==", user.uid),
+        where("songId", "==", song.id)
+      );
+      const recentlyPlayedSnapshot = await getDocs(recentlyPlayedQuery);
+      recentlyPlayedSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+
+      // If the deleted song is currently playing, stop it and clear current song
+      if (currentSong && currentSong.id === song.id) {
+        setCurrentSong(null);
+        setIsPlaying(false);
+        setCurrentIndex(-1);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }
+
+      // Remove from current playlist if present
+      if (playlist.length > 0) {
+        const updatedPlaylist = playlist.filter(s => s.id !== song.id);
+        setPlaylist(updatedPlaylist);
+        setOriginalPlaylist(updatedPlaylist);
+
+        // Update current index if necessary
+        if (currentIndex >= updatedPlaylist.length) {
+          setCurrentIndex(updatedPlaylist.length - 1);
+        } else if (currentIndex > 0) {
+          // Find the new index of the current song
+          const currentSongIndex = updatedPlaylist.findIndex(s => currentSong && s.id === currentSong.id);
+          setCurrentIndex(currentSongIndex >= 0 ? currentSongIndex : currentIndex);
+        }
+      }
+
+      // Remove from favorites
+      if (favorites.has(song.id)) {
+        const newFavorites = new Set(favorites);
+        newFavorites.delete(song.id);
+        setFavorites(newFavorites);
+
+        // Also remove from favorites collection
+        const favQuery = query(
+          collection(db, "favorites"),
+          where("userId", "==", user.uid),
+          where("songId", "==", song.id)
+        );
+        const favSnapshot = await getDocs(favQuery);
+        favSnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+      }
+
+      // Remove from all playlists
+      const playlistsQuery = query(collection(db, "playlists"), where("userId", "==", user.uid));
+      const playlistsSnapshot = await getDocs(playlistsQuery);
+      playlistsSnapshot.forEach(async (playlistDoc) => {
+        const playlistData = playlistDoc.data();
+        const songs = playlistData.songs || [];
+        const updatedSongs = songs.filter(s => s.id !== song.id);
+
+        if (updatedSongs.length !== songs.length) {
+          // Song was removed from this playlist
+          await updateDoc(playlistDoc.ref, { songs: updatedSongs });
+
+          // Update local state
+          setPlaylists(prev => prev.map(p =>
+            p.id === playlistDoc.id ? { ...p, songs: updatedSongs } : p
+          ));
+        }
+      });
+
     } catch (error) {
       console.error("Error deleting song:", error);
     }
@@ -487,6 +654,10 @@ function AppContent() {
 
   const toggleLyrics = () => {
     setShowLyrics(!showLyrics);
+  };
+
+  const toggleChatbot = () => {
+    setIsChatbotOpen(!isChatbotOpen);
   };
 
   const setCurrentSongPaused = (song) => {
@@ -588,6 +759,8 @@ function AppContent() {
   const handleCoverUpload = async (file) => {
     if (!file) return null;
     setUploadingCover(true);
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Uploading cover image...");
     try {
       const result = await uploadToCloudinary(file);
       return result.url;
@@ -596,12 +769,16 @@ function AppContent() {
       return null;
     } finally {
       setUploadingCover(false);
+      setShowLoadingModal(false);
     }
   };
 
   const createPlaylist = async (e) => {
     e.preventDefault();
     if (!newPlaylistName.trim() || !user) return;
+
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Creating playlist...");
 
     try {
       // Check if playlist with same name already exists
@@ -614,6 +791,7 @@ function AppContent() {
 
       if (!existingSnapshot.empty) {
         alert("A playlist with this name already exists. Please choose a different name.");
+        setShowLoadingModal(false);
         return;
       }
 
@@ -643,6 +821,8 @@ function AppContent() {
         coverUrl = await handleCoverUpload(newPlaylistCover);
       }
 
+      setLoadingModalMessage("Saving playlist...");
+
       const playlistData = {
         name: newPlaylistName.trim(),
         cover: coverUrl,
@@ -664,6 +844,8 @@ function AppContent() {
       setShowCreatePlaylistModal(false);
     } catch (error) {
       console.error("Error creating playlist:", error);
+    } finally {
+      setShowLoadingModal(false);
     }
   };
 
@@ -718,11 +900,30 @@ function AppContent() {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-spotify-black dark:bg-light-black">
         <div className="flex items-center mb-4">
-          <Music className="w-12 h-12 mr-3" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
+          <AudioWaveform className="w-12 h-12 mr-3" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
 
         </div>
         <h1 className="text-spotify-white dark:text-light-white text-3xl font-bold">CloudJamz</h1>
-        <div className="text-spotify-lighter text-3xl font-bold">•••</div>
+        <div className="loader mt-1" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }}>
+          <span className="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" x="0" y="0" viewBox="0 0 100 100">
+              <ellipse transform="rotate(-21.283 49.994 75.642)" cx="50" cy="75.651" rx="19.347" ry="16.432" fill="currentColor"></ellipse>
+              <path fill="currentColor" d="M58.474 7.5h10.258v63.568H58.474z"></path>
+            </svg>
+          </span>
+          <span className="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" x="0" y="0" viewBox="0 0 100 100">
+              <ellipse transform="rotate(-21.283 49.994 75.642)" cx="50" cy="75.651" rx="19.347" ry="16.432" fill="currentColor"></ellipse>
+              <path fill="currentColor" d="M58.474 7.5h10.258v63.568H58.474z"></path>
+            </svg>
+          </span>
+          <span className="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" x="0" y="0" viewBox="0 0 100 100">
+              <ellipse transform="rotate(-21.283 49.994 75.642)" cx="50" cy="75.651" rx="19.347" ry="16.432" fill="currentColor"></ellipse>
+              <path fill="currentColor" d="M58.474 7.5h10.258v63.568H58.474z"></path>
+            </svg>
+          </span>
+        </div>
       </div>
     );
   }
@@ -760,10 +961,10 @@ function AppContent() {
             // For others, open external
             window.open(result.external_url, '_blank');
           }
-        }} onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
+        }} onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)} onTogglePlayingView={() => setIsPlayingViewVisible(!isPlayingViewVisible)} isSidebarVisible={isSidebarVisible} isPlayingViewVisible={isPlayingViewVisible} />
 
         <div className="flex flex-1 overflow-hidden pt-16">
-          <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} isMobileOpen={isMobileSidebarOpen} onToggleMobile={() => setIsMobileSidebarOpen(false)} currentPath={location.pathname} />
+          <Sidebar onNavigate={handleNavigate} onUpload={handleUpload} onCreatePlaylist={() => setShowCreatePlaylistModal(true)} user={user} isMobileOpen={isMobileSidebarOpen} onToggleMobile={() => setIsMobileSidebarOpen(false)} currentPath={location.pathname} isVisible={isSidebarVisible} />
 
           <div className="flex flex-1 overflow-hidden">
             <Routes className="flex-1">
@@ -779,14 +980,14 @@ function AppContent() {
               <Route path="/song/:id" element={<SongPage songId={window.location.pathname.split('/').pop()} onPlaySong={handlePlayFromCard} />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/account-settings" element={<AccountSettingsPage />} />
-              <Route path="/trash" element={<TrashPage user={user} onPlaySong={handlePlayFromCard} currentSong={currentSong} isPlaying={isPlaying} />} />
+              <Route path="/trash" element={<TrashPage user={user} />} />
               <Route path="/about-devs" element={<AboutDevs />} />
               <Route path="/search" element={<Home user={user} onPlaySong={handlePlayFromCard} onDelete={deleteSong} currentSong={currentSong} isPlaying={isPlaying} />} />
             </Routes>
           </div>
 
         {/* Only show PlayingViewPanel if not on settings or account-settings pages and not on small screens */}
-        {location.pathname !== '/settings' && location.pathname !== '/account-settings' && !isSmallScreen && (
+        {location.pathname !== '/settings' && location.pathname !== '/account-settings' && !isSmallScreen && isPlayingViewVisible && (currentSong || playlist.length > 0) && (
           <PlayingViewPanel
             currentSong={currentSong}
             playlist={playlist}
@@ -797,6 +998,7 @@ function AppContent() {
             lyrics={lyrics}
             lyricsLoading={lyricsLoading}
             onNavigate={handleNavigate}
+            isVisible={isPlayingViewVisible}
           />
         )}
 
@@ -901,6 +1103,12 @@ function AppContent() {
         )}
         </div>
 
+        {/* Loading Modal */}
+        <LoadingModal
+          isOpen={showLoadingModal}
+          message={loadingModalMessage}
+        />
+
         <PlayerBar
           currentSong={currentSong}
           isPlaying={isPlaying}
@@ -923,6 +1131,48 @@ function AppContent() {
           showLyrics={showLyrics}
           onToggleLyrics={toggleLyrics}
           onNavigate={handleNavigate}
+          onToggleChatbot={toggleChatbot}
+          isChatbotOpen={isChatbotOpen}
+        />
+
+        <Chatbot
+          isOpen={isChatbotOpen}
+          onClose={toggleChatbot}
+          onPlaySong={handlePlayFromCard}
+          currentSong={currentSong}
+          onTogglePlayPause={togglePlayPause}
+          onNext={nextSong}
+          onPrev={prevSong}
+          onShuffleToggle={toggleShuffle}
+          shuffle={shuffle}
+          onLoopToggle={toggleLoop}
+          loop={loop}
+          onSearchResult={(result) => {
+            if (result.type === 'track' && result.url) {
+              // Create a song object for local playback
+              const songForPlayback = {
+                id: result.id,
+                title: result.title,
+                artist: result.artist,
+                album: result.album,
+                cover: result.cover,
+                url: result.url,
+                duration: 30, // Preview tracks are 30 seconds
+                userId: null, // Not a user-uploaded song
+                isSpotifyTrack: true
+              };
+              playSong(songForPlayback);
+            } else if (result.type === 'artist') {
+              // Navigate to artist page
+              navigate(`/artist/${encodeURIComponent(result.artist)}`);
+            } else if (result.type === 'album') {
+              // Navigate to album page
+              navigate(`/album/${encodeURIComponent(result.album)}`);
+            } else {
+              // For others, open external
+              window.open(result.external_url, '_blank');
+            }
+          }}
         />
       </div>
     </ClickSpark>

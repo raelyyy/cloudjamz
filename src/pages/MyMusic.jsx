@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
 
 export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist, onDeleteSong, currentSong, isPlaying, onUpdateCurrentSong }) {
   const [songs, setSongs] = useState([]);
@@ -120,7 +121,11 @@ export default function MyMusic({ user, onPlaySong, onFavorite, onAddToPlaylist,
         </div>
       )}
       {loading ? (
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading your music...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : songs.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {songs.map((song) => (

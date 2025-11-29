@@ -11,11 +11,13 @@ import {
   signInWithPopup,
   updateProfile
 } from "firebase/auth";
-import { Eye, EyeOff, Music } from "lucide-react";
+import { Eye, EyeOff, AudioWaveform, Sun, Moon } from "lucide-react";
 import { auth } from "../firebase";
+import { useTheme } from "../contexts/ThemeContext";
 import LiquidEther from "../components/LiquidEther";
 
 export default function Auth({ onLogin }) {
+  const { isDarkMode, toggleTheme } = useTheme();
   const colors = useMemo(() => [
     '#FFEDEE', // very light red
     '#FFF1E0', // pale orange
@@ -213,12 +215,23 @@ export default function Auth({ onLogin }) {
         autoResumeDelay={3000}
         autoRampDuration={0.6}
       />
+      <button
+        onClick={toggleTheme}
+        className="absolute top-4 right-4 p-3 rounded-full bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light dark:hover:bg-light-light transition z-10"
+        title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {isDarkMode ? (
+          <Sun className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
+        ) : (
+          <Moon className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
+        )}
+      </button>
       <div
         className="bg-spotify-black/80 dark:bg-light-dark/80 backdrop-blur-lg rounded-lg p-8 w-full max-w-md shadow-xl border border-gray-500/30 dark:border-gray-400/30"
         style={{ position: 'relative', zIndex: 1 }}
       >
         <div className="flex items-center justify-center mb-6">
-          <Music className="w-12 h-12 text-yellow-400 mr-3" />
+          <AudioWaveform className="w-12 h-12 text-yellow-400 mr-3" />
         </div>
         <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white text-center mb-2">
           {isForgotPassword ? "Reset Password" : isSignUp ? "Sign Up to CloudJamz" : "Login to CloudJamz"}
@@ -244,7 +257,7 @@ export default function Auth({ onLogin }) {
               </div>
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-yellow-300 text-spotify-white dark:text-light-black font-semibold py-3 px-4 rounded transition"
+                className="w-full bg-gradient-to-r from-yellow-300 to-yellow-500 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-yellow-300 text-spotify-black dark:text-light-black font-semibold py-3 px-4 rounded transition"
               >
                 Send Reset Email
               </button>

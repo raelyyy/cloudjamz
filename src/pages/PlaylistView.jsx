@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
 import { ArrowLeft } from "lucide-react";
 
 export default function PlaylistView({ playlistId, user, onPlaySong }) {
@@ -47,7 +48,18 @@ export default function PlaylistView({ playlistId, user, onPlaySong }) {
   if (loading) {
     return (
       <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading playlist...</div>
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-6 h-6 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+          <div>
+            <div className="h-8 bg-spotify-light dark:bg-light-light rounded mb-2 animate-pulse w-64"></div>
+            <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse w-32"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       </main>
     );
   }

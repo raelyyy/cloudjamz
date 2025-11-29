@@ -11,6 +11,7 @@
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     var(--gh-angle),
     hsla(0, 0%, 0%, 0) 60%,

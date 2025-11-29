@@ -1,11 +1,12 @@
-import { Search, User, Settings, Music, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu, Sun, Moon, CodeXml } from "lucide-react";
+import { Search, User, Settings, AudioWaveform, Palette, Bell, Shield, ListMusic, UserCog, LogOut, Menu, Sun, Moon, CodeXml, Sidebar, PanelRight, MessageCircle, BotMessageSquare } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { searchItunes } from "../utils/itunesApi";
 import { useTheme } from "../contexts/ThemeContext";
 import ScrambledText from "./ScrambledText";
+import LoadingSpinner from "./LoadingSpinner";
 
-export default function Navbar({ user, onLogin, onLogout, onSearchResult, onToggleMobileSidebar }) {
+export default function Navbar({ user, onLogin, onLogout, onSearchResult, onToggleMobileSidebar, onToggleSidebar, onTogglePlayingView, isSidebarVisible, isPlayingViewVisible }) {
    const navigate = useNavigate();
    const { isDarkMode, toggleTheme } = useTheme();
    const [searchQuery, setSearchQuery] = useState("");
@@ -94,12 +95,12 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
       </button>
 
       {/* Logo */}
-      <Link to="/" className="flex items-center">
-        <Music className="w-8 h-8 mr-2" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
+      <Link to="/" className="flex items-center w-40">
+        <AudioWaveform className="w-8 h-8 mr-2" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
         <ScrambledText
           className="text-xl font-black hidden sm:block"
           scrambleChars=".:"
-          radius={50}
+          radius={15}
           duration={0.8}
           speed={0.3}
         >
@@ -127,7 +128,7 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-spotify-lighter dark:text-light-lighter bg-spotify-light dark:bg-light-light md:left-4 md:w-5 md:h-5 left-3 w-4 h-4" />
           {loading && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+              <LoadingSpinner size="small" />
             </div>
           )}
         </div>
@@ -173,6 +174,25 @@ export default function Navbar({ user, onLogin, onLogout, onSearchResult, onTogg
         >
           <CodeXml className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
         </button>
+
+        {/* Sidebar Toggle Button */}
+        <button
+          onClick={onToggleSidebar}
+          className={`p-3 rounded-full bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light dark:hover:bg-light-light transition ${!isSidebarVisible ? 'opacity-50' : ''}`}
+          title={isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"}
+        >
+          <Sidebar className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
+        </button>
+
+        {/* Playing View Toggle Button */}
+        <button
+          onClick={onTogglePlayingView}
+          className={`p-3 rounded-full bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light dark:hover:bg-light-light transition ${!isPlayingViewVisible ? 'opacity-50' : ''}`}
+          title={isPlayingViewVisible ? "Hide Playing View" : "Show Playing View"}
+        >
+          <PanelRight className="w-6 h-6 text-spotify-lighter dark:text-light-lighter" />
+        </button>
+
 
         {user ? (
           <>

@@ -2,23 +2,27 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, query, where, limit, orderBy, onSnapshot, doc, updateDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { getItunesRecommendations } from "../utils/itunesApi";
+import { getItunesRecommendations, searchItunes } from "../utils/itunesApi";
+import { searchJamendo } from "../utils/jamendoApi";
 import MusicCard from "../components/MusicCard";
 import RecentlyPlayedCard from "../components/RecentlyPlayedCard";
 import TextType from "../components/TextType";
 import SpotlightCard from "../components/SpotlightCard";
 import CurvedLoop from "../components/CurvedLoop";
+import SkeletonCard from "../components/SkeletonCard";
+import { InfiniteMovingCards } from "../components/ui/infinite-moving-cards";
+import PlayingAnimationOverlay from "../components/PlayingAnimationOverlay";
 import { Music } from "lucide-react";
 import heroBg from "../assets/hero_bg.png";
 
 export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused, onUpdateCurrentSong }) {
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-  const navigate = useNavigate();
+   const getGreeting = () => {
+     const hour = new Date().getHours();
+     if (hour < 12) return 'Good morning';
+     if (hour < 18) return 'Good afternoon';
+     return 'Good evening';
+   };
+   const navigate = useNavigate();
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [myMusic, setMyMusic] = useState([]);
   const [spotifyRecommendations, setSpotifyRecommendations] = useState([]);
@@ -26,6 +30,35 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   const [loading, setLoading] = useState(true);
   const [editLoading, setEditLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [topSongs] = useState([
+    { id: '1', title: 'Die With a Smile', artist: 'Lady Gaga & Bruno Mars', cover: 'https://i.scdn.co/image/ab67616d0000b27382ea2e9e1858aa012c57cd45' },
+    { id: '2', title: 'APT.', artist: 'ROSÉ & Bruno Mars', cover: 'https://i.scdn.co/image/ab67616d0000b27336032cb4acd9df050bc2e197' },
+    { id: '3', title: 'Luther', artist: 'Kendrick Lamar & SZA', cover: 'https://images.genius.com/012d76f2f3aa2aa704958e9ad1abb7f6.1000x1000x1.png' },
+    { id: '4', title: 'BIRDS OF A FEATHER', artist: 'Billie Eilish', cover: 'https://i.scdn.co/image/ab67616d0000b27371d62ea7ea8a5be92d3c1f62' },
+    { id: '5', title: 'DTMF', artist: 'Bad Bunny', cover: 'https://images.genius.com/66f08db4c1d9d323ab441ab6c04a034a.1000x1000x1.png' },
+    { id: '6', title: 'Ordinary', artist: 'Alex Warren', cover: 'https://images.genius.com/30e72e090d74f195ddf3cd5d5f1e4b14.1000x1000x1.png' },
+    { id: '7', title: 'Golden', artist: 'HUNTR/X (and collaborators)', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6f/Huntr-x_-_Golden.png' },
+    { id: '8', title: 'Back to Friends', artist: 'sombr', cover: 'https://i.scdn.co/image/ab67616d0000b2739d24f74c1e2d8a12b1e591ec' },
+    { id: '9', title: 'Man I Need', artist: 'Olivia Dean', cover: 'https://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Man_I_Need_by_Olivia_Dean.png/250px-Man_I_Need_by_Olivia_Dean.png' },
+    { id: '10', title: 'The Fate of Ophelia', artist: 'Taylor Swift', cover: 'https://i.scdn.co/image/ab67616d0000b273d7812467811a7da6e6a44902' },
+    { id: '11', title: 'Nokia', artist: 'Drake', cover: 'https://i.scdn.co/image/ab67616d0000b273b5a28a256eae6dc0424fef59' },
+    { id: '11b', title: 'Evil J0rdan', artist: 'Drake', cover: 'https://images.genius.com/84387c03968c8d51fd8be652624f112a.1000x1000x1.png ' },
+    { id: '12', title: '4x4', artist: 'Travis Scott', cover: 'https://upload.wikimedia.org/wikipedia/en/5/54/Travis_Scott_-_4X4.png ' },
+    { id: '13', title: "I'm the Problem", artist: 'Morgan Wallen', cover: 'https://i.scdn.co/image/ab67616d0000b27335ea219ce47813b5e2dc3745' },
+    { id: '14', title: 'Pink Pony Club', artist: 'Chappell Roan', cover: 'https://upload.wikimedia.org/wikipedia/en/e/ee/Chappell_Roan_-_Pink_Pony_Club.png ' },
+    { id: '15', title: 'Espresso', artist: 'Sabrina Carpenter', cover: 'https://i.scdn.co/image/ab67616d0000b273659cd4673230913b3918e0d5' },
+    { id: '16', title: 'like JENNIE', artist: 'Jennie', cover: 'https://i.scdn.co/image/ab67616d0000b273dcf27dec5e479b2e39c4c993' },
+    { id: '17', title: 'Like Him', artist: 'Tyler, The Creator', cover: 'https://images.genius.com/4ae7a9503661df9498fc79a0cfd5cc09.1000x1000x1.png' },
+    { id: '18', title: 'Daisies', artist: 'Justin Bieber', cover: 'https://i1.sndcdn.com/artworks-wI9TT7uoQxczMYSf-amxjIQ-t500x500.png' },
+    { id: '19', title: 'Guess', artist: 'Charli XCX (ft. Billie Eilish)', cover: 'https://i1.sndcdn.com/artworks-9MEML5lS0HAmNVTM-Yqpq5g-t500x500.jpg' }
+  ]);
+  const [playableTopSongs, setPlayableTopSongs] = useState(topSongs);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const [showMyMusicLeft, setShowMyMusicLeft] = useState(false);
+  const [showMyMusicRight, setShowMyMusicRight] = useState(true);
+  const [showPlaylistsLeft, setShowPlaylistsLeft] = useState(false);
+  const [showPlaylistsRight, setShowPlaylistsRight] = useState(true);
 
   useEffect(() => {
     // Fetch Spotify recommendations on mount
@@ -173,11 +206,76 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
     fetchRecommendations();
     fetchSuggestedPlaylists();
+
+    const fetchPlayableTopSongs = async () => {
+      try {
+        const playable = await Promise.all(topSongs.map(async (song) => {
+          // Clean the search query: replace & with 'and', remove extra spaces
+          const cleanTitle = song.title.replace(/\s+/g, ' ').trim();
+          const cleanArtist = song.artist.replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
+          const query = `${cleanTitle} ${cleanArtist}`;
+
+          let results = await searchItunes(query);
+
+          // If no results, try with just the title
+          if (results.length === 0) {
+            results = await searchItunes(cleanTitle);
+          }
+
+          // If still no results, try with just the artist
+          if (results.length === 0) {
+            results = await searchItunes(cleanArtist);
+          }
+
+          let bestMatch = null;
+          if (results.length > 0) {
+            // Find the best match - prefer tracks with previewUrl
+            bestMatch = results.find(r => r.url) || results[0];
+          }
+
+          // If no URL found, try searching with just the title
+          if (!bestMatch || !bestMatch.url) {
+            const titleResults = await searchItunes(cleanTitle);
+            if (titleResults.length > 0) {
+              const titleBest = titleResults.find(r => r.url) || titleResults[0];
+              if (titleBest.url) {
+                bestMatch = titleBest;
+              }
+            }
+          }
+
+          // If still no URL, try Jamendo as fallback
+          if (!bestMatch || !bestMatch.url) {
+            const jamendoResults = await searchJamendo(query);
+            if (jamendoResults.length > 0) {
+              bestMatch = jamendoResults[0]; // Jamendo tracks have full audio URLs
+            }
+          }
+
+          if (bestMatch && bestMatch.url) {
+            return {
+              ...song,
+              url: bestMatch.url,
+              external_url: bestMatch.external_url,
+              duration: bestMatch.duration,
+              album: bestMatch.album || song.album,
+            };
+          } else {
+            return song;
+          }
+        }));
+        setPlayableTopSongs(playable);
+      } catch (error) {
+        console.error('Error fetching playable top songs:', error);
+      }
+    };
+
+    fetchPlayableTopSongs();
   }, []);
 
   useEffect(() => {
     if (!user) {
-      setRecentSongs([]);
+      setRecentlyPlayed([]);
       setMyMusic([]);
       setLoading(false);
       return;
@@ -247,6 +345,62 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   useEffect(() => {
     setImgError(false);
   }, [currentSong]);
+
+  const handleScroll = (e) => {
+    const container = e.target;
+    setShowLeftArrow(container.scrollLeft > 0);
+    setShowRightArrow(container.scrollLeft + container.clientWidth < container.scrollWidth);
+  };
+
+  const getMaskClass = () => {
+    if (showLeftArrow && showRightArrow) {
+      return ' [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]';
+    } else if (showLeftArrow) {
+      // At right end, fade left
+      return ' [mask-image:linear-gradient(to_left,white,white_80%,transparent)]';
+    } else if (showRightArrow) {
+      // At left end, fade right
+      return ' [mask-image:linear-gradient(to_right,white,white_80%,transparent)]';
+    } else {
+      return '';
+    }
+  };
+
+  const handleMyMusicScroll = (e) => {
+    const container = e.target;
+    setShowMyMusicLeft(container.scrollLeft > 0);
+    setShowMyMusicRight(container.scrollLeft + container.clientWidth < container.scrollWidth);
+  };
+
+  const getMyMusicMaskClass = () => {
+    if (showMyMusicLeft && showMyMusicRight) {
+      return ' [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]';
+    } else if (showMyMusicLeft) {
+      return ' [mask-image:linear-gradient(to_left,white,white_80%,transparent)]';
+    } else if (showMyMusicRight) {
+      return ' [mask-image:linear-gradient(to_right,white,white_80%,transparent)]';
+    } else {
+      return '';
+    }
+  };
+
+  const handlePlaylistsScroll = (e) => {
+    const container = e.target;
+    setShowPlaylistsLeft(container.scrollLeft > 0);
+    setShowPlaylistsRight(container.scrollLeft + container.clientWidth < container.scrollWidth);
+  };
+
+  const getPlaylistsMaskClass = () => {
+    if (showPlaylistsLeft && showPlaylistsRight) {
+      return ' [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]';
+    } else if (showPlaylistsLeft) {
+      return ' [mask-image:linear-gradient(to_left,white,white_80%,transparent)]';
+    } else if (showPlaylistsRight) {
+      return ' [mask-image:linear-gradient(to_right,white,white_80%,transparent)]';
+    } else {
+      return '';
+    }
+  };
 
   const handleEditMySong = async (updatedSong) => {
     if (!updatedSong) return;
@@ -395,8 +549,84 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
         </div>
       </SpotlightCard>
 
+      {/* Floating 3D Card */}
+      <div className="flex justify-center mb-10 mt-2">
+        <div className="card-3d">
+          {(playableTopSongs.length > 0 ? playableTopSongs : Array.from({ length: 20 }, (_, i) => ({ id: `placeholder-${i}`, title: 'Loading...', artist: 'Please wait', cover: '/placeholder-cover.png' }))).map((song) => (
+            <div key={song.id} className={`music-card-3d relative cursor-pointer ${song.id === currentSong?.id && isPlaying ? 'playing' : ''}`} onClick={() => { if (song.url) { onPlaySong(song, playableTopSongs); } else { console.log('No preview URL for song:', song.title); } }}>
+              <img src={song.cover || "/placeholder-cover.png"} alt="Cover" className="w-full h-full object-cover rounded-lg" />
+              <PlayingAnimationOverlay isPlaying={song.id === currentSong?.id && isPlaying} />
+              <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/70 rounded-b-lg">
+                <h3 className="text-xs font-semibold text-white truncate text-center">{song.title}</h3>
+                <p className="text-xs text-gray-300 truncate text-center">{song.artist}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading...</div>
+        <>
+          {/* Recently Played Skeleton */}
+          {user && (
+            <section className="mb-8">
+              <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-48"></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 lg:grid-cols-2 lg:grid-rows-4 gap-3">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <div key={i} className="bg-spotify-dark dark:bg-light-dark rounded-lg p-4 animate-pulse">
+                    <div className="w-full h-24 bg-spotify-light dark:bg-light-light rounded-lg mb-4"></div>
+                    <div className="h-4 bg-spotify-light dark:bg-light-light rounded mb-2"></div>
+                    <div className="h-3 bg-spotify-light dark:bg-light-light rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* My Music Skeleton */}
+          {user && (
+            <section className="mb-8">
+              <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-32"></div>
+              <div className="overflow-x-auto overflow-y-visible pb-4 -mx-2">
+                <div className="flex gap-4 px-2 pt-4">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <div key={i} className="flex-shrink-0 w-44 sm:w-48">
+                      <SkeletonCard />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Suggested Music Skeleton */}
+          <section className="mb-8 pt-4">
+            <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-40"></div>
+            <div className="relative">
+              <div className="flex space-x-4 overflow-x-auto pb-4 pr-4">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="flex-shrink-0 w-48 pt-2">
+                    <SkeletonCard />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Suggested Playlists Skeleton */}
+          <section className="mb-8">
+            <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-48"></div>
+            <div className="relative">
+              <div className="flex space-x-4 overflow-x-auto pb-4">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="flex-shrink-0 w-48">
+                    <SkeletonCard />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
       ) : (
         <>
           {user && recentlyPlayed.length > 0 && (
@@ -418,28 +648,60 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           {user && myMusic.length > 0 && (
             <section className="mb-8">
               <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">My Music</h2>
-              <div id="my-music-scroll" className="overflow-x-auto overflow-y-visible pb-4 -mx-2">
-                <div className="flex gap-4 px-2 pt-4 scroll-smooth snap-x snap-mandatory">
-                  {myMusic.map((song) => (
-                    <div key={song.docId || song.id} className="flex-shrink-0 w-44 sm:w-48 snap-start">
-                      <MusicCard
-                        className="w-full"
-                        song={song}
-                        onPlay={() => onPlaySong(song, myMusic)}
-                        onFavorite={onFavorite}
-                        onAddToPlaylist={onAddToPlaylist}
-                        onDelete={onDelete}
-                        onEdit={(updatedSong) => {
-                          if (!editLoading) {
-                            handleEditMySong(updatedSong);
-                          }
-                        }}
-                        isPlaying={song.id === currentSong?.id && isPlaying}
-                        isFavorite={favorites.has(song.id)}
-                      />
-                    </div>
-                  ))}
+              <div className="relative">
+                <div className={`overflow-x-auto overflow-y-visible pb-4 -mx-2${getMyMusicMaskClass()}`} id="my-music-scroll" onScroll={handleMyMusicScroll}>
+                  <div className="flex gap-4 px-2 pt-4 scroll-smooth snap-x snap-mandatory">
+                    {myMusic.map((song) => (
+                      <div key={song.docId || song.id} className="flex-shrink-0 w-44 sm:w-48 snap-start">
+                        <MusicCard
+                          className="w-full"
+                          song={song}
+                          onPlay={() => onPlaySong(song, myMusic)}
+                          onFavorite={onFavorite}
+                          onAddToPlaylist={onAddToPlaylist}
+                          onDelete={onDelete}
+                          onEdit={(updatedSong) => {
+                            if (!editLoading) {
+                              handleEditMySong(updatedSong);
+                            }
+                          }}
+                          isPlaying={song.id === currentSong?.id && isPlaying}
+                          isFavorite={favorites.has(song.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                {showMyMusicLeft && (
+                  <button
+                    onClick={() => {
+                      const scrollContainer = document.getElementById('my-music-scroll');
+                      if (scrollContainer) {
+                        scrollContainer.scrollBy({ left: -400, behavior: 'smooth' });
+                      }
+                    }}
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg z-10"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+                {showMyMusicRight && (
+                  <button
+                    onClick={() => {
+                      const scrollContainer = document.getElementById('my-music-scroll');
+                      if (scrollContainer) {
+                        scrollContainer.scrollBy({ left: 400, behavior: 'smooth' });
+                      }
+                    }}
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg z-10"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </section>
           )}
@@ -448,7 +710,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           <section className="mb-8 pt-4">
             <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Suggested Music</h2>
             <div className="relative">
-              <div className="flex space-x-4 overflow-x-auto pb-4 pr-4 scroll-smooth" id="suggested-scroll">
+              <div className={`flex space-x-4 overflow-x-auto pb-4 pr-4 scroll-smooth${getMaskClass()}`} id="suggested-scroll" onScroll={handleScroll}>
                 {spotifyRecommendations.length > 0 ? (
                   spotifyRecommendations.slice(0, 20).map((track, index) => (
                     <div key={track.id} className={`flex-shrink-0 w-48 pt-2 ${index === 0 ? 'pl-2' : ''}`}>
@@ -481,32 +743,36 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
               </div>
               {spotifyRecommendations.length > 0 && (
                 <>
-                  <button
-                    onClick={() => {
-                      const scrollContainer = document.getElementById('suggested-scroll');
-                      if (scrollContainer) {
-                        scrollContainer.scrollBy({ left: -400, behavior: 'smooth' });
-                      }
-                    }}
-                    className="absolute right-16 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => {
-                      const scrollContainer = document.getElementById('suggested-scroll');
-                      if (scrollContainer) {
-                        scrollContainer.scrollBy({ left: 400, behavior: 'smooth' });
-                      }
-                    }}
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                  {showLeftArrow && (
+                    <button
+                      onClick={() => {
+                        const scrollContainer = document.getElementById('suggested-scroll');
+                        if (scrollContainer) {
+                          scrollContainer.scrollBy({ left: -400, behavior: 'smooth' });
+                        }
+                      }}
+                      className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg z-10"
+                    >
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
+                  {showRightArrow && (
+                    <button
+                      onClick={() => {
+                        const scrollContainer = document.getElementById('suggested-scroll');
+                        if (scrollContainer) {
+                          scrollContainer.scrollBy({ left: 400, behavior: 'smooth' });
+                        }
+                      }}
+                      className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg z-10"
+                    >
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -515,7 +781,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Suggested Playlists</h2>
             <div className="relative">
-              <div className="flex space-x-4 overflow-x-auto pb-4 scroll-smooth" id="playlists-scroll">
+              <div className={`flex space-x-4 overflow-x-auto pb-4 scroll-smooth${getPlaylistsMaskClass()}`} id="playlists-scroll" onScroll={handlePlaylistsScroll}>
                 {suggestedPlaylists.map((playlist) => (
                   <div key={playlist.id} className="flex-shrink-0 w-48">
                     <MusicCard
@@ -536,35 +802,35 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
                   </div>
                 ))}
               </div>
-              {suggestedPlaylists.length > 0 && (
-                <>
-                  <button
-                    onClick={() => {
-                      const scrollContainer = document.getElementById('playlists-scroll');
-                      if (scrollContainer) {
-                        scrollContainer.scrollBy({ left: -400, behavior: 'smooth' });
-                      }
-                    }}
-                    className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => {
-                      const scrollContainer = document.getElementById('playlists-scroll');
-                      if (scrollContainer) {
-                        scrollContainer.scrollBy({ left: 400, behavior: 'smooth' });
-                      }
-                    }}
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </>
+              {showPlaylistsLeft && (
+                <button
+                  onClick={() => {
+                    const scrollContainer = document.getElementById('playlists-scroll');
+                    if (scrollContainer) {
+                      scrollContainer.scrollBy({ left: -400, behavior: 'smooth' });
+                    }
+                  }}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg z-10"
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              {showPlaylistsRight && (
+                <button
+                  onClick={() => {
+                    const scrollContainer = document.getElementById('playlists-scroll');
+                    if (scrollContainer) {
+                      scrollContainer.scrollBy({ left: 400, behavior: 'smooth' });
+                    }
+                  }}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-spotify-black/80 hover:bg-spotify-black text-spotify-white rounded-full p-2 shadow-lg z-10"
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
               )}
             </div>
           </section>

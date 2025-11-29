@@ -3,6 +3,7 @@ import { collection, getDocs, query, where, limit, orderBy, addDoc, deleteDoc } 
 import { Search } from "lucide-react";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
 import { useTheme } from "../contexts/ThemeContext";
 
 export default function SearchPage({ onPlaySong, user }) {
@@ -140,7 +141,14 @@ export default function SearchPage({ onPlaySong, user }) {
       )}
 
       {loading ? (
-        <div className="text-spotify-lighter">Searching...</div>
+        <section>
+          <h2 className="text-2xl font-bold text-spotify-white mb-4">Search Results</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {Array.from({ length: 10 }, (_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </section>
       ) : searchResults.length > 0 ? (
         <section>
           <h2 className="text-2xl font-bold text-spotify-white mb-4">Search Results</h2>

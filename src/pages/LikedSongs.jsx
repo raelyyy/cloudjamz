@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
 import { RefreshCw } from "lucide-react";
 
 export default function LikedSongs({ user, onPlaySong, onFavorite, onAddToPlaylist, currentSong, isPlaying }) {
@@ -78,7 +79,11 @@ export default function LikedSongs({ user, onPlaySong, onFavorite, onAddToPlayli
     <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
       <h1 className="text-3xl font-bold text-spotify-white dark:text-light-white mb-8">Liked Songs</h1>
       {loading ? (
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading liked songs...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : likedSongs.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {likedSongs.map((song) => (

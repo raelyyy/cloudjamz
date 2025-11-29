@@ -1,5 +1,6 @@
 import React from "react";
 import { Music } from "lucide-react";
+import SkeletonCard from "./SkeletonCard";
 
 const PlayingViewPanel = ({
   currentSong,
@@ -11,25 +12,75 @@ const PlayingViewPanel = ({
   lyrics,
   lyricsLoading,
   onNavigate,
+  isVisible = true,
 }) => {
+  const handleArtistClick = (artist) => (e) => {
+    e.stopPropagation();
+    onNavigate && onNavigate(`/artist/${encodeURIComponent(artist.trim())}`);
+  };
+
+  const renderArtists = (artistString) => {
+    if (!artistString) return null;
+    const artists = artistString.split(/[,;&]|feat\.|ft\./i).map(a => a.trim()).filter(a => a);
+    return artists.map((artist, index) => (
+      <span key={artist}>
+        <span
+          className="cursor-pointer hover:text-yellow-400 transition-colors"
+          onClick={handleArtistClick(artist)}
+        >
+          {artist}
+        </span>
+        {index < artists.length - 1 && <span className="text-spotify-lighter dark:text-light-lighter">, </span>}
+      </span>
+    ));
+  };
   if (!currentSong) {
     return (
-      <div className="w-96 bg-spotify-dark dark:bg-light-dark p-4 flex flex-col items-center justify-center text-center h-full">
-        <div className="text-spotify-lighter dark:text-light-lighter mb-4">
-          <svg
-            className="w-16 h-16 mx-auto mb-2"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
-          </svg>
+      <div className="w-96 bg-spotify-dark dark:bg-light-dark p-4 flex flex-col h-full">
+        {/* NOW PLAYING SKELETON */}
+        <div className="mb-4 pt-4">
+          <h2 className="text-spotify-white dark:text-light-white text-lg font-semibold mb-4">Now Playing</h2>
+          <div className="flex items-center space-x-3 mb-4 animate-pulse">
+            {/* Cover skeleton */}
+            <div className="w-16 h-16 bg-spotify-light dark:bg-light-light rounded-md"></div>
+            <div className="flex-1 min-w-0">
+              {/* Title skeleton */}
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded mb-2"></div>
+              {/* Artist skeleton */}
+              <div className="h-3 bg-spotify-light dark:bg-light-light rounded w-3/4 mb-1"></div>
+              {/* Album skeleton */}
+              <div className="h-3 bg-spotify-light dark:bg-light-light rounded w-1/2"></div>
+            </div>
+            {/* Status indicator skeleton */}
+            <div className="w-3 h-3 bg-spotify-light dark:bg-light-light rounded-full"></div>
+          </div>
         </div>
-        <p className="text-spotify-lighter dark:text-light-lighter">No song playing</p>
+
+        {/* UP NEXT SKELETON */}
+        <div className="flex-1 overflow-hidden">
+          <h3 className="text-spotify-white dark:text-light-white text-md font-semibold mb-3">Up Next</h3>
+          <div className="space-y-2">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex items-center space-x-3 p-2 animate-pulse">
+                {/* Cover skeleton */}
+                <div className="w-10 h-10 bg-spotify-light dark:bg-light-light rounded-md"></div>
+                <div className="flex-1 min-w-0">
+                  {/* Title skeleton */}
+                  <div className="h-3 bg-spotify-light dark:bg-light-light rounded mb-1"></div>
+                  {/* Artist skeleton */}
+                  <div className="h-3 bg-spotify-light dark:bg-light-light rounded w-2/3"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   const upcomingSongs = playlist.slice(currentIndex + 1);
+
+  if (!isVisible) return null;
 
   return (
     <div className="w-96 bg-spotify-dark dark:bg-light-dark p-4 pb-2 flex flex-col h-full">
@@ -48,22 +99,24 @@ const PlayingViewPanel = ({
             >
               {currentSong.title}
             </p>
-            <p
-              className="text-spotify-lighter dark:text-light-lighter text-sm truncate cursor-pointer hover:text-yellow-400 transition-colors"
-              onClick={() => onNavigate && onNavigate(`/artist/${encodeURIComponent(currentSong.artist)}`)}
-            >
-              {currentSong.artist}
+            <p className="text-spotify-lighter dark:text-light-lighter text-sm truncate">
+              {renderArtists(currentSong.artist)}
             </p>
             <p className="text-spotify-lighter dark:text-light-lighter text-xs truncate">
               {currentSong.album}
             </p>
           </div>
 
-          <div
-            className={`w-3 h-3 rounded-full ${
-              isPlaying ? "bg-yellow-500" : "bg-gray-500"
-            }`}
-          ></div>
+          {isPlaying ? (
+            <div className="loading">
+              <div className="load"></div>
+              <div className="load"></div>
+              <div className="load"></div>
+              <div className="load"></div>
+            </div>
+          ) : (
+            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+          )}
         </div>
       </div>
 
@@ -98,15 +151,36 @@ const PlayingViewPanel = ({
                     <CoverImage size={40} song={song} />
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate text-spotify-white dark:text-light-white">{song.title}</p>
+                      <p
+                        className="text-sm truncate text-spotify-white dark:text-light-white cursor-pointer hover:text-yellow-400 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigate && onNavigate(`/song/${song.id}`);
+                        }}
+                      >
+                        {song.title}
+                      </p>
                       <p className="text-spotify-lighter dark:text-light-lighter text-xs truncate">
-                        {song.artist}
+                        {renderArtists(song.artist)}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-spotify-lighter dark:text-light-lighter text-sm">No upcoming songs</p>
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <div key={i} className="flex items-center space-x-3 p-2 animate-pulse">
+                      {/* Cover skeleton */}
+                      <div className="w-10 h-10 bg-spotify-light dark:bg-light-light rounded-md"></div>
+                      <div className="flex-1 min-w-0">
+                        {/* Title skeleton */}
+                        <div className="h-3 bg-spotify-light dark:bg-light-light rounded mb-1"></div>
+                        {/* Artist skeleton */}
+                        <div className="h-3 bg-spotify-light dark:bg-light-light rounded w-2/3"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </>

@@ -26,7 +26,7 @@ export const getItunesRecommendations = async () => {
             title: entry['im:name']?.label || 'Unknown Title',
             artist: entry['im:artist']?.label || 'Unknown Artist',
             album: entry['im:collection']?.['im:name']?.label || 'Unknown Album',
-            cover: entry['im:image']?.[2]?.label || entry['im:image']?.[1]?.label || entry['im:image']?.[0]?.label || '',
+            cover: (entry['im:image']?.[2]?.label || entry['im:image']?.[1]?.label || entry['im:image']?.[0]?.label || '').replace('170x170', '600x600').replace('100x100', '600x600'),
             url: entry.link?.[1]?.attributes?.href || '', // Preview URL from links
             external_url: entry.link?.[0]?.attributes?.href || '',
             duration: 30, // iTunes previews are 30 seconds
@@ -60,7 +60,7 @@ export const getItunesRecommendations = async () => {
               title: track.trackName || 'Unknown Title',
               artist: track.artistName || 'Unknown Artist',
               album: track.collectionName || 'Unknown Album',
-              cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
+              cover: track.artworkUrl100?.replace('100x100', '600x600') || '',
               url: track.previewUrl || '',
               external_url: track.trackViewUrl || '',
               duration: Math.floor(track.trackTimeMillis / 1000) || 30,
@@ -113,7 +113,7 @@ export const getItunesRecommendations = async () => {
             title: track.trackName || 'Unknown Title',
             artist: track.artistName || 'Unknown Artist',
             album: track.collectionName || 'Unknown Album',
-            cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
+            cover: track.artworkUrl100?.replace('100x100', '600x600') || '',
             url: track.previewUrl || '',
             external_url: track.trackViewUrl || '',
             duration: Math.floor(track.trackTimeMillis / 1000) || 30,
@@ -140,15 +140,14 @@ export const getItunesRecommendations = async () => {
   }
 };
 
-export const searchItunes = async (query, entity = 'song') => {
+export const searchItunes = async (query, entity = 'song', limit = 20) => {
   try {
     const response = await axios.get('https://itunes.apple.com/search', {
       params: {
         term: query,
         media: 'music',
         entity: entity,
-        limit: entity === 'musicArtist' ? 10 : 20,
-        country: 'us'
+        limit: entity === 'musicArtist' ? 10 : limit
       }
     });
 
@@ -159,7 +158,7 @@ export const searchItunes = async (query, entity = 'song') => {
           type: 'artist',
           title: artist.artistName || 'Unknown Artist',
           artist: artist.artistName,
-          cover: artist.artworkUrl100?.replace('100x100', '300x300') || '',
+          cover: artist.artworkUrl100?.replace('100x100', '600x600') || '',
           external_url: artist.artistLinkUrl || '',
           genre: artist.primaryGenreName || 'Unknown Genre',
         }));
@@ -170,23 +169,26 @@ export const searchItunes = async (query, entity = 'song') => {
           title: album.collectionName || 'Unknown Album',
           artist: album.artistName || 'Unknown Artist',
           album: album.collectionName,
-          cover: album.artworkUrl100?.replace('100x100', '300x300') || '',
+          cover: album.artworkUrl100?.replace('100x100', '600x600') || '',
           external_url: album.collectionViewUrl || '',
           genre: album.primaryGenreName || 'Unknown Genre',
         }));
       } else {
-        return response.data.results.map(track => ({
-          id: track.trackId?.toString() || `search-${track.collectionId}`,
-          type: 'track',
-          title: track.trackName || 'Unknown Title',
-          artist: track.artistName || 'Unknown Artist',
-          album: track.collectionName || 'Unknown Album',
-          cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
-          url: track.previewUrl || '',
-          external_url: track.trackViewUrl || '',
-          duration: Math.floor(track.trackTimeMillis / 1000) || 30,
-          genre: track.primaryGenreName || 'Unknown Genre',
-        }));
+        // Filter out tracks without preview URL
+        return response.data.results
+          .filter(track => track.previewUrl)
+          .map(track => ({
+            id: track.trackId?.toString() || `search-${track.collectionId}`,
+            type: 'track',
+            title: track.trackName || 'Unknown Title',
+            artist: track.artistName || 'Unknown Artist',
+            album: track.collectionName || 'Unknown Album',
+            cover: track.artworkUrl100?.replace('100x100', '600x600') || '',
+            url: track.previewUrl,
+            external_url: track.trackViewUrl || '',
+            duration: Math.floor(track.trackTimeMillis / 1000) || 30,
+            genre: track.primaryGenreName || 'Unknown Genre',
+          }));
       }
     }
     return [];
@@ -214,7 +216,7 @@ export const getItunesTrackById = async (trackId) => {
         title: track.trackName || 'Unknown Title',
         artist: track.artistName || 'Unknown Artist',
         album: track.collectionName || 'Unknown Album',
-        cover: track.artworkUrl100?.replace('100x100', '300x300') || '',
+        cover: track.artworkUrl100?.replace('100x100', '600x600') || '',
         url: track.previewUrl || '',
         external_url: track.trackViewUrl || '',
         duration: Math.floor(track.trackTimeMillis / 1000) || 30,

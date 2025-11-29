@@ -5,6 +5,7 @@ import EditSongModal from "./EditSongModal";
 import { auth } from "../firebase";
 import { useTheme } from "../contexts/ThemeContext";
 import GlareHover from "./GlareHover";
+import PlayingAnimationOverlay from "./PlayingAnimationOverlay";
 
 export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, onDelete, onRestore, onPermanentDelete, onRemoveFromPlaylist, onEdit, className = '', isPlaying = false, showAddToPlaylist = true, showLikeButton = true, isFavorite = false }) {
    const navigate = useNavigate();
@@ -37,12 +38,28 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
   }, [showMenu]);
 
   const handleCardClick = () => {
-    onPlay(song);
+    onPlay?.(song);
   };
 
-  const handleArtistClick = (e) => {
+  const handleArtistClick = (artist) => (e) => {
     e.stopPropagation();
-    navigate(`/artist/${encodeURIComponent(song.artist)}`);
+    navigate(`/artist/${encodeURIComponent(artist.trim())}`);
+  };
+
+  const renderArtists = (artistString) => {
+    if (!artistString) return null;
+    const artists = artistString.split(/[,;&]|feat\.|ft\./i).map(a => a.trim()).filter(a => a);
+    return artists.map((artist, index) => (
+      <span key={artist}>
+        <span
+          className="cursor-pointer hover:underline hover:text-yellow-400 transition-colors"
+          onClick={handleArtistClick(artist)}
+        >
+          {artist}
+        </span>
+        {index < artists.length - 1 && <span className="text-spotify-lighter dark:text-light-lighter">, </span>}
+      </span>
+    ));
   };
 
   const handleTitleClick = (e) => {
@@ -137,10 +154,11 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
           <div className="rounded-lg w-full aspect-square bg-spotify-light/20 dark:bg-light-light/20 flex items-center justify-center shadow-lg hidden">
             <Music className="w-24 h-24 text-spotify-lighter dark:text-light-lighter" />
           </div>
+          <PlayingAnimationOverlay isPlaying={isPlaying} />
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onPlay(song);
+              onPlay?.(song);
             }}
             className={`absolute bottom-2 right-2 p-3 bg-gradient-to-r from-yellow-200 to-yellow-400 rounded-full transition-opacity shadow-lg hover:from-yellow-300 hover:to-yellow-500 ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
             aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -243,7 +261,9 @@ export default function MusicCard({ song, onPlay, onFavorite, onAddToPlaylist, o
           )}
         </div>
         <h3 onClick={handleTitleClick} className="text-spotify-white dark:text-light-white font-semibold truncate mb-1 hover:underline cursor-pointer">{song.title}</h3>
-        <p onClick={handleArtistClick} className="text-spotify-lighter dark:text-light-lighter text-sm truncate hover:underline cursor-pointer">{song.artist}</p>
+        <p className="text-spotify-lighter dark:text-light-lighter text-sm truncate">
+          {renderArtists(song.artist)}
+        </p>
         </div>
       </GlareHover>
       <EditSongModal

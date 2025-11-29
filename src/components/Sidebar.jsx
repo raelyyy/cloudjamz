@@ -4,12 +4,13 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useTheme } from "../contexts/ThemeContext";
 
-export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, isMobileOpen, onToggleMobile, currentPath }) {
-  const { isDarkMode } = useTheme();
-  const [userPlaylists, setUserPlaylists] = useState([]);
-  const fileInputRef = useRef(null);
-  const imageInputRef = useRef(null);
-  const folderInputRef = useRef(null);
+export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, isMobileOpen, onToggleMobile, currentPath, isVisible = true }) {
+   const { isDarkMode } = useTheme();
+   const [userPlaylists, setUserPlaylists] = useState([]);
+   const [playlistsLoading, setPlaylistsLoading] = useState(true);
+   const fileInputRef = useRef(null);
+   const imageInputRef = useRef(null);
+   const folderInputRef = useRef(null);
 
   const handleFileUpload = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -19,6 +20,7 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
 
   useEffect(() => {
     if (user) {
+      setPlaylistsLoading(true);
       const q = query(collection(db, "playlists"), where("userId", "==", user.uid));
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const playlists = [];
@@ -26,11 +28,13 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
           playlists.push({ id: doc.id, ...doc.data() });
         });
         setUserPlaylists(playlists);
+        setPlaylistsLoading(false);
       });
 
       return () => unsubscribe();
     } else {
       setUserPlaylists([]);
+      setPlaylistsLoading(false);
     }
   }, [user]);
 
@@ -125,13 +129,24 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
               My Music
             </button>
           </li>
-          {userPlaylists.slice(0, 5).map((playlist) => (
-            <li key={playlist.id}>
-              <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className={`block px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition truncate w-full text-left ${currentPath === `/playlist/${playlist.id}` ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }}>
-                {playlist.name}
-              </button>
-            </li>
-          ))}
+          {playlistsLoading ? (
+            // Skeleton loaders for playlists
+            Array.from({ length: 3 }, (_, i) => (
+              <li key={`skeleton-${i}`}>
+                <div className="px-4 py-2 animate-pulse">
+                  <div className="h-4 bg-spotify-light dark:bg-light-light rounded w-3/4"></div>
+                </div>
+              </li>
+            ))
+          ) : (
+            userPlaylists.slice(0, 5).map((playlist) => (
+              <li key={playlist.id}>
+                <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className={`block px-4 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition truncate w-full text-left ${currentPath === `/playlist/${playlist.id}` ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }}>
+                  {playlist.name}
+                </button>
+              </li>
+            ))
+          )}
         </ul>
       </div>
 
@@ -167,7 +182,8 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="w-64 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-6 overflow-y-auto hidden md:block relative">
+      {isVisible ? (
+        <aside className="w-64 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-6 overflow-y-auto hidden md:block relative">
         {/* Upload Section */}
         <div className="mb-4 mt-4">
           <button
@@ -293,23 +309,34 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
               </button>
             </li>
 
-            {/* User Playlists */}
-            {userPlaylists.slice(0, 5).map((playlist) => (
-              <li key={playlist.id}>
-                <button
-                  onClick={() => onNavigate(`/playlist/${playlist.id}`)}
-                  className={`block px-4 py-2 truncate
-                    hover:bg-spotify-light dark:hover:bg-light-light
-                    rounded-lg transition w-full text-left
-                    ${currentPath === `/playlist/${playlist.id}`
-                      ? 'text-white dark:text-[#000000] font-bold'
-                      : 'text-spotify-lighter dark:text-light-lighter'
-                    }`}
-                >
-                  {playlist.name}
-                </button>
-              </li>
-            ))}
+            {/* User Playlists or Skeleton Loaders */}
+            {playlistsLoading ? (
+              // Skeleton loaders for playlists
+              Array.from({ length: 3 }, (_, i) => (
+                <li key={`skeleton-${i}`}>
+                  <div className="px-4 py-2 animate-pulse">
+                    <div className="h-4 bg-spotify-light dark:bg-light-light rounded w-3/4"></div>
+                  </div>
+                </li>
+              ))
+            ) : (
+              userPlaylists.slice(0, 5).map((playlist) => (
+                <li key={playlist.id}>
+                  <button
+                    onClick={() => onNavigate(`/playlist/${playlist.id}`)}
+                    className={`block px-4 py-2 truncate
+                      hover:bg-spotify-light dark:hover:bg-light-light
+                      rounded-lg transition w-full text-left
+                      ${currentPath === `/playlist/${playlist.id}`
+                        ? 'text-white dark:text-[#000000] font-bold'
+                        : 'text-spotify-lighter dark:text-light-lighter'
+                      }`}
+                  >
+                    {playlist.name}
+                  </button>
+                </li>
+              ))
+            )}
 
           </ul>
         </div>
@@ -341,6 +368,113 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
           className="hidden"
         />
       </aside>
+      ) : (
+        /* Minimal Sidebar - Icons Only */
+        <aside className="w-16 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-4 pt-8 overflow-y-auto hidden md:block relative">
+          {/* Upload Section */}
+          <div className="mb-4">
+            <button
+              onClick={() => handleUploadClick('audio')}
+              className="w-full p-2 rounded-lg transition hover:scale-105 duration-300 flex items-center justify-center"
+              style={{ background: 'linear-gradient(to right, #F7E35A, #DAA520)' }}
+              title="Upload Music"
+            >
+              <Plus className="w-4 h-4" style={{ color: 'black' }} />
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="mb-8">
+            <ul className="space-y-4">
+              <li>
+                <button onClick={() => onNavigate('/')} className={`flex items-center justify-center px-2 py-3 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition ${currentPath === '/' ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }} title="Home">
+                  <Home className="w-5 h-5" />
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/playlists')} className={`flex items-center justify-center px-2 py-3 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition ${currentPath === '/playlists' ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }} title="Your Library">
+                  <Library className="w-5 h-5" />
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/trash')} className={`flex items-center justify-center px-2 py-3 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition ${currentPath === '/trash' ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }} title="Trash">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </li>
+            </ul>
+          </nav>
+
+          {/* Playlists */}
+          <div>
+            <div className="flex items-center justify-center mb-4">
+              <button onClick={onCreatePlaylist} className="flex items-center justify-center text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white transition" style={{ color: isDarkMode ? '#555' : undefined }} title="Create Playlist">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            <ul className="space-y-2">
+              <li>
+                <button onClick={() => onNavigate('/liked')} className={`flex items-center justify-center px-2 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition ${currentPath === '/liked' ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }} title="Liked Songs">
+                  <Heart className="w-4 h-4" style={{ color: isDarkMode ? '#DAA520' : '#F7E35A' }} />
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/my-music')} className={`flex items-center justify-center px-2 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition ${currentPath === '/my-music' ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }} title="My Music">
+                  <Music className="w-4 h-4" />
+                </button>
+              </li>
+              {playlistsLoading ? (
+                Array.from({ length: 3 }, (_, i) => (
+                  <li key={`skeleton-${i}`}>
+                    <div className="px-2 py-2 animate-pulse">
+                      <div className="w-8 h-8 bg-spotify-light dark:bg-light-light rounded mx-auto"></div>
+                    </div>
+                  </li>
+                ))
+              ) : userPlaylists.length > 0 ? (
+                userPlaylists.slice(0, 5).map((playlist) => (
+                  <li key={playlist.id}>
+                    <button onClick={() => onNavigate(`/playlist/${playlist.id}`)} className={`flex items-center justify-center px-2 py-2 text-spotify-lighter dark:text-light-lighter hover:text-spotify-white dark:hover:text-light-white hover:bg-spotify-light dark:hover:bg-light-light rounded-lg transition ${currentPath === `/playlist/${playlist.id}` ? 'bg-spotify-dark dark:bg-light-dark text-spotify-white dark:text-light-white font-bold' : ''}`} style={{ color: isDarkMode ? '#555' : undefined }} title={playlist.name}>
+                      <div className={`w-4 h-4 rounded bg-gradient-to-r ${playlist.gradientColor || 'from-gray-500'}`}></div>
+                    </button>
+                  </li>
+                ))
+              ) : (
+                <li>
+                  <div className="flex items-center justify-center px-2 py-2 text-spotify-lighter dark:text-light-lighter opacity-50" title="No playlists yet">
+                    <Music className="w-4 h-4" />
+                  </div>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Hidden file inputs */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <input
+            ref={folderInputRef}
+            type="file"
+            webkitdirectory=""
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+        </aside>
+      )}
     </>
   );
 }

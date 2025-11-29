@@ -2,10 +2,14 @@ import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
+import LoadingModal from "../components/LoadingModal";
 
-export default function TrashPage({ user, onPlaySong }) {
-  const [trashedSongs, setTrashedSongs] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function TrashPage({ user }) {
+   const [trashedSongs, setTrashedSongs] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [showLoadingModal, setShowLoadingModal] = useState(false);
+   const [loadingModalMessage, setLoadingModalMessage] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -67,6 +71,9 @@ export default function TrashPage({ user, onPlaySong }) {
       return;
     }
 
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Emptying trash...");
+
     try {
       for (const song of trashedSongs) {
         // Skip Cloudinary deletion for now (client-side not supported for unsigned uploads)
@@ -74,6 +81,8 @@ export default function TrashPage({ user, onPlaySong }) {
       }
     } catch (error) {
       console.error("Error emptying trash:", error);
+    } finally {
+      setShowLoadingModal(false);
     }
   };
 
@@ -102,7 +111,11 @@ export default function TrashPage({ user, onPlaySong }) {
       </div>
 
       {loading ? (
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading trash...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : trashedSongs.length > 0 ? (
         <>
           <p className="text-spotify-lighter dark:text-light-lighter mb-6">
@@ -114,7 +127,6 @@ export default function TrashPage({ user, onPlaySong }) {
                 <MusicCard
                   song={song}
                   isFavorite={false}
-                  onPlay={() => onPlaySong(song)}
                   onRestore={() => restoreSong(song)}
                   onPermanentDelete={() => permanentDeleteSong(song)}
                 />
@@ -127,6 +139,12 @@ export default function TrashPage({ user, onPlaySong }) {
           Your trash is empty.
         </div>
       )}
+
+      {/* Loading Modal */}
+      <LoadingModal
+        isOpen={showLoadingModal}
+        message={loadingModalMessage}
+      />
     </main>
   );
 }

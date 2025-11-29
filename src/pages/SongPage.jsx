@@ -1,17 +1,40 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { searchItunes, getItunesTrackById } from "../utils/itunesApi";
 import { Play, Heart, Plus, Share, Download, Music } from "lucide-react";
 
 export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) {
+  const navigate = useNavigate();
   const [song, setSong] = useState(null);
   const [itunesData, setItunesData] = useState(null);
   const [artistData, setArtistData] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  const handleArtistClick = (artist) => (e) => {
+    e.preventDefault();
+    navigate(`/artist/${encodeURIComponent(artist.trim())}`);
+  };
+
+  const renderArtists = (artistString) => {
+    if (!artistString) return null;
+    const artists = artistString.split(/[,;&]|feat\.|ft\./i).map(a => a.trim()).filter(a => a);
+    return artists.map((artist, index) => (
+      <span key={artist}>
+        <Link
+          to={`/artist/${encodeURIComponent(artist.trim())}`}
+          className="hover:underline hover:text-yellow-400 transition-colors"
+          onClick={handleArtistClick(artist)}
+        >
+          {artist}
+        </Link>
+        {index < artists.length - 1 && <span>, </span>}
+      </span>
+    ));
+  };
 
   useEffect(() => {
     fetchSong();
@@ -158,7 +181,33 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
   if (loading) {
     return (
       <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading song...</div>
+        <div className="flex items-end gap-8 mb-8">
+          <div className="w-64 h-64 rounded-lg bg-spotify-light dark:bg-light-light animate-pulse"></div>
+          <div className="flex-1">
+            <div className="h-12 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-96"></div>
+            <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-2 animate-pulse w-64"></div>
+            <div className="h-5 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-48"></div>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-32 h-12 bg-spotify-light dark:bg-light-light rounded-full animate-pulse"></div>
+              <div className="w-12 h-12 bg-spotify-light dark:bg-light-light rounded-full animate-pulse"></div>
+              <div className="w-12 h-12 bg-spotify-light dark:bg-light-light rounded-full animate-pulse"></div>
+              <div className="w-12 h-12 bg-spotify-light dark:bg-light-light rounded-full animate-pulse"></div>
+              <div className="w-12 h-12 bg-spotify-light dark:bg-light-light rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-4 animate-pulse w-32"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -189,12 +238,7 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
         <div className="flex-1">
           <h1 className="text-6xl font-bold text-spotify-white dark:text-light-white mb-4">{song.title}</h1>
           <p className="text-2xl text-spotify-lighter dark:text-light-lighter mb-2">
-            <Link
-              to={`/artist/${encodeURIComponent(song.artist)}`}
-              className="hover:underline hover:text-yellow-400 transition-colors"
-            >
-              {song.artist}
-            </Link>
+            {renderArtists(song.artist)}
           </p>
           {(song.album || itunesData?.album) && (
             <p className="text-xl text-spotify-lighter dark:text-light-lighter mb-4">
@@ -248,7 +292,7 @@ export default function SongPage({ songId, onPlaySong, user, onAddToPlaylist }) 
           <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Song Details</h2>
           <div className="space-y-2 text-spotify-lighter dark:text-light-lighter">
             <p><strong>Title:</strong> {song.title}</p>
-            <p><strong>Artist:</strong> {song.artist}</p>
+            <p><strong>Artist:</strong> {renderArtists(song.artist)}</p>
             {(song.album || itunesData?.album) && (
               <p><strong>Album:</strong> {song.album || itunesData?.album}</p>
             )}

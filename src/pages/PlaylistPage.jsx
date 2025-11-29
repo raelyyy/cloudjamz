@@ -5,6 +5,8 @@ import { db } from "../firebase";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { MoreHorizontal, Edit, Trash2, Share, ArrowLeft } from "lucide-react";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
+import LoadingModal from "../components/LoadingModal";
 
 export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favorites, onFavorite, onRemoveFromPlaylist }) {
   const { id } = useParams();
@@ -17,6 +19,8 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
   const [editingDescription, setEditingDescription] = useState("");
   const [editingCover, setEditingCover] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [loadingModalMessage, setLoadingModalMessage] = useState("");
   const dropdownRef = useRef(null);
 
   const handleEditPlaylist = () => {
@@ -32,6 +36,8 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
   const handleCoverUpload = async (file) => {
     if (!file) return null;
     setUploadingCover(true);
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Uploading cover image...");
     try {
       const result = await uploadToCloudinary(file, `playlist-covers/${playlist.userId}`);
       return result.url;
@@ -40,12 +46,16 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
       return null;
     } finally {
       setUploadingCover(false);
+      setShowLoadingModal(false);
     }
   };
 
   const editPlaylist = async (e) => {
     e.preventDefault();
     if (!editingName.trim() || !playlist) return;
+
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Updating playlist...");
 
     try {
       // Check for duplicate playlist names
@@ -55,6 +65,7 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
 
       if (existingPlaylists.length > 0) {
         alert("A playlist with this name already exists. Please choose a different name.");
+        setShowLoadingModal(false);
         return;
       }
 
@@ -84,6 +95,8 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
       setEditingCover(null);
     } catch (error) {
       console.error("Error editing playlist:", error);
+    } finally {
+      setShowLoadingModal(false);
     }
   };
 
@@ -324,8 +337,21 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
 
   if (loading) {
     return (
-      <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading playlist...</div>
+      <main className="flex-1 pt-8 pb-8 px-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-6 h-6 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+            <div>
+              <div className="h-8 bg-spotify-light dark:bg-light-light rounded mb-2 animate-pulse w-64"></div>
+              <div className="h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse w-32"></div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       </main>
     );
   }
@@ -482,6 +508,12 @@ export default function PlaylistPage({ onPlaySong, currentSong, isPlaying, favor
           </div>
         </div>
       )}
+
+      {/* Loading Modal */}
+      <LoadingModal
+        isOpen={showLoadingModal}
+        message={loadingModalMessage}
+      />
     </main>
   );
 }

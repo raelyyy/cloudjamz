@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { searchItunes } from "../utils/itunesApi";
+import SkeletonCard from "../components/SkeletonCard";
 import { Play, Clock } from "lucide-react";
 
 export default function ArtistPage({ artistName, onPlaySong, currentSong, isPlaying }) {
@@ -18,7 +19,7 @@ export default function ArtistPage({ artistName, onPlaySong, currentSong, isPlay
 
     try {
       // Fetch songs from iTunes API
-      const itunesSongs = await searchItunes(artistName);
+      const itunesSongs = await searchItunes(artistName, 'song', 100);
       if (itunesSongs && itunesSongs.length > 0) {
         setSongs(itunesSongs);
 
@@ -59,7 +60,41 @@ export default function ArtistPage({ artistName, onPlaySong, currentSong, isPlay
   if (loading) {
     return (
       <main className="flex-1 p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-        <div className="text-spotify-lighter dark:text-light-lighter">Loading artist...</div>
+        <div className="mb-8 flex items-center gap-6">
+          <div className="w-48 h-48 rounded-lg bg-spotify-light dark:bg-light-light animate-pulse"></div>
+          <div>
+            <div className="h-8 bg-spotify-light dark:bg-light-light rounded mb-2 animate-pulse w-64"></div>
+            <div className="h-4 bg-spotify-light dark:bg-light-light rounded w-32 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="mb-8">
+          <div className="h-6 bg-spotify-light dark:bg-light-light rounded mb-2 animate-pulse w-48"></div>
+          <div className="h-4 bg-spotify-light dark:bg-light-light rounded w-24 animate-pulse"></div>
+        </div>
+        <div className="bg-spotify-dark dark:bg-light-dark rounded-lg overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-spotify-light/20 dark:border-light-light/20">
+            <div className="grid grid-cols-12 gap-2">
+              <div className="col-span-1 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="col-span-1 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="col-span-6 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="col-span-3 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+              <div className="col-span-1 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+            </div>
+          </div>
+          <div className="divide-y divide-spotify-light/10 dark:divide-light-light/10">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i} className="px-6 py-3">
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-1 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+                  <div className="col-span-1 w-10 h-10 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+                  <div className="col-span-6 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+                  <div className="col-span-3 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+                  <div className="col-span-1 h-4 bg-spotify-light dark:bg-light-light rounded animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
     );
   }
@@ -107,10 +142,11 @@ export default function ArtistPage({ artistName, onPlaySong, currentSong, isPlay
       {songs.length > 0 ? (
         <div className="bg-spotify-dark dark:bg-light-dark rounded-lg overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-spotify-light/20 dark:border-light-light/20">
-            <div className="grid grid-cols-12 gap-2 text-spotify-lighter dark:text-light-lighter text-sm font-medium">
+            <div className="grid grid-cols-12 gap-1 text-spotify-lighter dark:text-light-lighter text-sm font-medium">
               <div className="col-span-1">#</div>
               <div className="col-span-1"></div>
-              <div className="col-span-6">Title</div>
+              <div className="col-span-1"></div>
+              <div className="col-span-5">Title</div>
               <div className="col-span-3">Album</div>
               <div className="col-span-1 flex items-center justify-center">
                 <Clock className="w-4 h-4" />
@@ -128,15 +164,19 @@ export default function ArtistPage({ artistName, onPlaySong, currentSong, isPlay
                   }`}
                   onClick={() => onPlaySong(song)}
                 >
-                  <div className="grid grid-cols-12 gap-2 items-center text-spotify-white dark:text-light-white">
+                  <div className="grid grid-cols-12 gap-1 items-center text-spotify-white dark:text-light-white">
                     <div className={`col-span-1 ${isCurrentlyPlaying ? 'text-yellow-400' : 'text-spotify-lighter dark:text-light-lighter group-hover:text-yellow-400'}`}>
-                      {isCurrentlyPlaying ? (
-                        <span>{index + 1}</span>
-                      ) : (
-                        <>
-                          <span className="group-hover:hidden">{index + 1}</span>
-                          <Play className="w-4 h-4 hidden group-hover:block fill-current" />
-                        </>
+                      <span className="group-hover:hidden">{index + 1}</span>
+                      <Play className="w-4 h-4 hidden group-hover:block fill-current" />
+                    </div>
+                    <div className="col-span-1 flex items-center justify-center">
+                      {isCurrentlyPlaying && (
+                        <div className="loading">
+                          <div className="load"></div>
+                          <div className="load"></div>
+                          <div className="load"></div>
+                          <div className="load"></div>
+                        </div>
                       )}
                     </div>
                     <div className="col-span-1">
@@ -153,7 +193,7 @@ export default function ArtistPage({ artistName, onPlaySong, currentSong, isPlay
                         <Play className="w-4 h-4 text-spotify-lighter dark:text-light-lighter" />
                       </div>
                     </div>
-                    <div className="col-span-6">
+                    <div className="col-span-5">
                       <div className={`font-medium truncate ${isCurrentlyPlaying ? 'text-yellow-400' : ''}`}>{song.title}</div>
                     </div>
                     <div className="col-span-3 text-spotify-lighter dark:text-light-lighter truncate">

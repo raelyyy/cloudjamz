@@ -1,15 +1,28 @@
 import axios from 'axios';
 
 // Cloudinary upload function using direct upload to avoid Node.js modules in browser
-export const uploadToCloudinary = async (file) => {
+export const uploadToCloudinary = async (file, folder = '') => {
    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'diap7m2zq';
    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'cloudjamz';
 
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', uploadPreset);
-  // formData.append('folder', folder); // Commented out to upload to root
-  formData.append('resource_type', 'auto');
+
+  // Set folder if provided
+  if (folder) {
+    formData.append('folder', folder);
+  }
+
+  // Determine resource type based on file type
+  let resourceType = 'auto';
+  if (file.type.startsWith('audio/')) {
+    resourceType = 'video'; // Cloudinary treats audio as 'video' resource type
+  } else if (file.type.startsWith('image/')) {
+    resourceType = 'image';
+  }
+
+  formData.append('resource_type', resourceType);
 
   // Remove format and quality parameters for unsigned uploads
   // These need to be configured in the upload preset instead

@@ -5,6 +5,8 @@ import { db } from "../firebase";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import PlaylistCard from "../components/PlaylistCard";
 import MusicCard from "../components/MusicCard";
+import SkeletonCard from "../components/SkeletonCard";
+import LoadingModal from "../components/LoadingModal";
 import { Plus } from "lucide-react";
 
 export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
@@ -19,6 +21,8 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
   const [newPlaylistCover, setNewPlaylistCover] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [loadingModalMessage, setLoadingModalMessage] = useState("");
   const [myMusicName, setMyMusicName] = useState("My Music");
   const [myMusicDescription, setMyMusicDescription] = useState("");
   const [myMusicCover, setMyMusicCover] = useState(null);
@@ -75,6 +79,8 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
   const handleCoverUpload = async (file) => {
     if (!file) return null;
     setUploadingCover(true);
+    setShowLoadingModal(true);
+    setLoadingModalMessage("Uploading cover image...");
     try {
       const result = await uploadToCloudinary(file, `playlist-covers/${user.uid}`);
       return result.url;
@@ -83,6 +89,7 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
       return null;
     } finally {
       setUploadingCover(false);
+      setShowLoadingModal(false);
     }
   };
 
@@ -316,7 +323,11 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
       <div>
         <h2 className="text-2xl font-bold text-spotify-white dark:text-light-white mb-6">Playlists</h2>
         {loading ? (
-          <div className="text-spotify-lighter dark:text-light-lighter">Loading playlists...</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {Array.from({ length: 5 }, (_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
         ) : playlists.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {playlists.map((playlist) => (
@@ -336,6 +347,12 @@ export default function Playlists({ user, onPlaySong, onCreatePlaylist }) {
           </div>
         )}
       </div>
+
+      {/* Loading Modal */}
+      <LoadingModal
+        isOpen={showLoadingModal}
+        message={loadingModalMessage}
+      />
     </main>
   );
 }
