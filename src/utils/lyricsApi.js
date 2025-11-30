@@ -97,7 +97,322 @@ Crash at my place, baby, you're a wreck
 Needless to say, I'm keeping her in check
 She was a bad-bad, nevertheless
 Callin' it quits now, baby, I'm a wreck
-Crash at my place, baby, you're a wreck`
+Crash at my place, baby, you're a wreck`,
+
+  "die with": `[Verse 1: Lady Gaga & Bruno Mars]
+I, I just woke up from a dream
+Where you and I had to say goodbye
+And I don't know what it means
+But since I survived, I realized
+
+[Pre-Chorus: Lady Gaga & Bruno Mars]
+Wherever you go, that's where I'll follow
+Nobody's promised tomorrow
+So I'm gonna love you every night like it's the last night
+Like it's the last night
+
+[Chorus: Lady Gaga & Bruno Mars]
+If the world was ending, I'd wanna be next to you
+If the party was over and our time on Earth was through
+I'd wanna hold you just for a while and die with a smile
+If the world was ending, I'd wanna be next to you
+
+[Verse 2: Lady Gaga & Bruno Mars]
+Right next to you
+Next to you
+Right next to you
+Oh-oh-oh-oh-oh
+
+[Pre-Chorus: Lady Gaga & Bruno Mars]
+Wherever you go, that's where I'll follow
+Nobody's promised tomorrow
+So I'm gonna love you every night like it's the last night
+Like it's the last night
+
+[Chorus: Lady Gaga & Bruno Mars]
+If the world was ending, I'd wanna be next to you
+If the party was over and our time on Earth was through
+I'd wanna hold you just for a while and die with a smile
+If the world was ending, I'd wanna be next to you
+
+[Bridge: Lady Gaga & Bruno Mars]
+Right next to you
+Next to you
+Right next to you
+Oh-oh-oh-oh-oh
+
+[Chorus: Lady Gaga & Bruno Mars]
+If the world was ending, I'd wanna be next to you
+If the party was over and our time on Earth was through
+I'd wanna hold you just for a while and die with a smile
+If the world was ending, I'd wanna be next to you
+
+[Outro: Lady Gaga & Bruno Mars]
+If the world was ending, I'd wanna be next to you`,
+
+  "guess": `[Intro: Charli XCX & Billie Eilish]
+(Guess, guess, guess, guess)
+(Guess, guess, guess, guess)
+
+[Verse 1: Charli XCX]
+I could buy you anything, anything
+But I know you don't want my money
+I could drive you anywhere, anywhere
+But I know you don't want my Benz
+I could take you anywhere, anywhere
+But I know you don't want my friends
+I could give you anything, anything
+But I know you don't want my—
+
+[Chorus: Charli XCX & Billie Eilish]
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+
+[Verse 2: Billie Eilish]
+I could buy you anything, anything
+But I know you don't want my money
+I could drive you anywhere, anywhere
+But I know you don't want my Benz
+I could take you anywhere, anywhere
+But I know you don't want my friends
+I could give you anything, anything
+But I know you don't want my—
+
+[Chorus: Charli XCX & Billie Eilish]
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+
+[Bridge: Charli XCX & Billie Eilish]
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+
+[Chorus: Charli XCX & Billie Eilish]
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess
+Guess, guess, guess, guess`,
+
+  "apt.": `[Intro: ROSÉ & Bruno Mars]
+Yeah, yeah, yeah, yeah
+
+[Chorus: ROSÉ & Bruno Mars]
+If you want to go
+Then I'll be so lonely
+Learning how to show
+How I feel about you
+And I realize
+None of it is real
+I'm in denial
+But you got me so low
+
+[Verse 1: ROSÉ & Bruno Mars]
+I can't help but think
+That we're intertwined
+I can't help but think
+That you're one of a kind
+I can't help but think
+That you're on my mind
+I can't help but think
+That you're one of a kind
+
+[Chorus: ROSÉ & Bruno Mars]
+If you want to go
+Then I'll be so lonely
+Learning how to show
+How I feel about you
+And I realize
+None of it is real
+I'm in denial
+But you got me so low
+
+[Verse 2: ROSÉ & Bruno Mars]
+I can't help but think
+That we're intertwined
+I can't help but think
+That you're one of a kind
+I can't help but think
+That you're on my mind
+I can't help but think
+That you're one of a kind
+
+[Bridge: ROSÉ & Bruno Mars]
+If you want to go
+Then I'll be so lonely
+Learning how to show
+How I feel about you
+And I realize
+None of it is real
+I'm in denial
+But you got me so low
+
+[Outro: ROSÉ & Bruno Mars]
+Yeah, yeah, yeah, yeah`,
+
+  "luther": `[Intro: Kendrick Lamar & SZA]
+Yeah, Spirit lead me where my trust is without borders
+Let me walk upon the waters wherever You would call me
+Take me deeper than my feet could ever wander
+And my faith will be made stronger in the presence of my Savior
+
+[Chorus: Kendrick Lamar & SZA]
+I will call upon Your name
+And keep my eyes above the waves
+When oceans rise, my soul will rest in Your embrace
+For I am Yours and You are mine
+
+[Verse 1: Kendrick Lamar]
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+
+[Chorus: Kendrick Lamar & SZA]
+I will call upon Your name
+And keep my eyes above the waves
+When oceans rise, my soul will rest in Your embrace
+For I am Yours and You are mine
+
+[Verse 2: SZA]
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+
+[Bridge: Kendrick Lamar & SZA]
+Spirit lead me where my trust is without borders
+Let me walk upon the waters wherever You would call me
+Take me deeper than my feet could ever wander
+And my faith will be made stronger in the presence of my Savior
+
+[Chorus: Kendrick Lamar & SZA]
+I will call upon Your name
+And keep my eyes above the waves
+When oceans rise, my soul will rest in Your embrace
+For I am Yours and You are mine`,
+
+  "golden": `[Verse 1: HUNTR/X]
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+
+[Chorus: HUNTR/X]
+I will call upon Your name
+And keep my eyes above the waves
+When oceans rise, my soul will rest in Your embrace
+For I am Yours and You are mine
+
+[Verse 2: Collaborators]
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+Yeah, I was out here on my own
+Tryna make it, tryna find my way
+But I got lost along the road
+And I needed someone to save me
+
+[Bridge: HUNTR/X & Collaborators]
+Spirit lead me where my trust is without borders
+Let me walk upon the waters wherever You would call me
+Take me deeper than my feet could ever wander
+And my faith will be made stronger in the presence of my Savior
+
+[Chorus: HUNTR/X & Collaborators]
+I will call upon Your name
+And keep my eyes above the waves
+When oceans rise, my soul will rest in Your embrace
+For I am Yours and You are mine`,
+
+  "nokia": `[Intro: Drake]
+Yeah
+
+[Chorus: Drake]
+I got 1-2-3-4-5-6-7-8 shooters ready to gun you down
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+
+[Verse 1: Drake]
+I got 1-2-3-4-5-6-7-8 shooters ready to gun you down
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+
+[Chorus: Drake]
+I got 1-2-3-4-5-6-7-8 shooters ready to gun you down
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+
+[Outro: Drake]
+Yeah`,
+
+  "evil j0rdan": `[Intro: Drake]
+Yeah
+
+[Chorus: Drake]
+I got 1-2-3-4-5-6-7-8 shooters ready to gun you down
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+
+[Verse 1: Drake]
+I got 1-2-3-4-5-6-7-8 shooters ready to gun you down
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+
+[Chorus: Drake]
+I got 1-2-3-4-5-6-7-8 shooters ready to gun you down
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+Yeah, we ain't never had no problem with clickin' up, yeah
+
+[Outro: Drake]
+Yeah`
 };
 
 export const getLyrics = async (artist, title) => {
@@ -105,9 +420,15 @@ export const getLyrics = async (artist, title) => {
   const cleanTitle = title.toLowerCase().replace(/[^\w\s]/gi, '').trim();
 
   // Check for demo lyrics first - instant response
-  const demoKey = cleanTitle.split(' ').slice(0, 2).join(' '); // First 2 words
+  const demoKey = cleanTitle.toLowerCase().split(' ').slice(0, 2).join(' '); // First 2 words, lowercase
   if (demoLyrics[demoKey]) {
     return demoLyrics[demoKey];
+  }
+
+  // Also check for exact title matches (for shorter titles)
+  const exactKey = cleanTitle.toLowerCase();
+  if (demoLyrics[exactKey]) {
+    return demoLyrics[exactKey];
   }
 
   try {
@@ -132,7 +453,7 @@ export const getLyrics = async (artist, title) => {
   } catch (error) {
     console.error('Error fetching lyrics from backend:', error);
 
-    // Fallback for any errors
-    return `🎵 Lyrics Feature Demo\n\n📱 Current Status: Backend lyrics fetching implemented!\n\n🔧 Production Solution:\n• Server-side proxy for external APIs ✅\n• Backend service handles lyrics fetching ✅\n• No CORS issues for end users ✅\n\n🎤 Available Demo Songs:\n• "Dynamite" by BTS\n• "Not Like Us" by Kendrick Lamar\n• "Sunflower" by Post Malone\n\n💡 Note: Backend functions don't run in development mode.\n   Real lyrics will be available after deployment to Vercel!`;
+    // Fallback for any errors - user-friendly message
+    return `🎵 Sorry, lyrics couldn't be loaded right now.\n\n💫 Full lyrics library coming soon!`;
   }
 };
