@@ -116,7 +116,7 @@ export const getLyrics = async (artist, title) => {
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      return `🎵 Lyrics for "${title}" by ${artist}\n\n🔄 Backend lyrics fetching is active!\n\n📱 This song is now being processed through our multi-API backend system.\n\n🎤 Demo songs with instant lyrics:\n• "Dynamite" by BTS\n• "Not Like Us" by Kendrick Lamar\n• "Sunflower" by Post Malone\n\n💡 Real lyrics will be available after deployment to Vercel!\n\n🔍 We search multiple lyrics databases for maximum coverage.\n\n✅ CORS issues resolved with backend proxy implementation.`;
+      return `🎵 Lyrics for "${title}" by ${artist}\n\n🔄 Backend lyrics fetching is active!\n\n📱 This song is now being processed through our server-side API.\n\n🎤 Demo songs with instant lyrics:\n• "Dynamite" by BTS\n• "Not Like Us" by Kendrick Lamar\n• "Sunflower" by Post Malone\n\n💡 Real lyrics will be available after deployment to Vercel!\n\n✅ CORS issues resolved with backend proxy implementation.`;
     }
 
     // Call our backend API to fetch lyrics
