@@ -41,7 +41,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
     { id: '9', title: 'Man I Need', artist: 'Olivia Dean', cover: 'https://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Man_I_Need_by_Olivia_Dean.png/250px-Man_I_Need_by_Olivia_Dean.png' },
     { id: '10', title: 'The Fate of Ophelia', artist: 'Taylor Swift', cover: 'https://i.scdn.co/image/ab67616d0000b273d7812467811a7da6e6a44902' },
     { id: '11', title: 'Nokia', artist: 'Drake', cover: 'https://i.scdn.co/image/ab67616d0000b273b5a28a256eae6dc0424fef59' },
-    { id: '11b', title: 'Evil J0rdan', artist: 'Drake', cover: 'https://images.genius.com/84387c03968c8d51fd8be652624f112a.1000x1000x1.png ' },
+    { id: '11b', title: '陽光彩虹小白馬', artist: 'Wowkie Da', cover: 'https://i.ytimg.com/vi/dw7IGM2EO_s/maxresdefault.jpg' },
     { id: '12', title: '4x4', artist: 'Travis Scott', cover: 'https://upload.wikimedia.org/wikipedia/en/5/54/Travis_Scott_-_4X4.png ' },
     { id: '13', title: "I'm the Problem", artist: 'Morgan Wallen', cover: 'https://i.scdn.co/image/ab67616d0000b27335ea219ce47813b5e2dc3745' },
     { id: '14', title: 'Pink Pony Club', artist: 'Chappell Roan', cover: 'https://upload.wikimedia.org/wikipedia/en/e/ee/Chappell_Roan_-_Pink_Pony_Club.png ' },
