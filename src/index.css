@@ -228,7 +228,7 @@ body {
   height: calc(var(--card-width) * 0.5);
   transform-style: preserve-3d;
   transform: perspective(var(--card-perspective));
-  animation: autoRun3d 80s linear infinite;
+  animation: autoRun3d 80s linear infinite reverse;
   will-change: transform;
 }
 
