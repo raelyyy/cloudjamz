@@ -313,7 +313,7 @@ const Chatbot = ({
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed bottom-[95px] right-10 z-50 ${isMinimized ? 'w-80 h-14' : 'w-80 h-96'} bg-spotify-dark dark:bg-light-dark rounded-lg shadow-xl border border-spotify-light dark:border-light-light flex flex-col transition-all duration-300`}>
+    <div className={`fixed bottom-[95px] right-2 sm:right-10 z-50 ${isMinimized ? 'w-full sm:w-80 h-14' : 'w-full sm:w-80 h-96'} bg-spotify-dark dark:bg-light-dark rounded-lg shadow-xl border border-spotify-light dark:border-light-light flex flex-col transition-all duration-300`}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 
         border-b border-spotify-light dark:border-light-light
@@ -416,7 +416,7 @@ const Chatbot = ({
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-spotify-light dark:border-light-light">
+          <div className="p-1 pb-3 pt-3 border-t border-spotify-light dark:border-light-light ">
             <div className="flex items-center gap-2">
               <input
                 type="text"

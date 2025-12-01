@@ -98,7 +98,16 @@ function AppContent() {
   // Detect small screen
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 768);
+      const small = window.innerWidth < 768;
+      setIsSmallScreen(small);
+      // On mobile, hide sidebar and playing view panel
+      if (small) {
+        setIsSidebarVisible(false);
+        setIsPlayingViewVisible(false);
+      } else {
+        setIsSidebarVisible(true);
+        setIsPlayingViewVisible(true);
+      }
     };
 
     checkScreenSize();
