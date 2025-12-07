@@ -579,16 +579,22 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           {user && recentlyPlayed.length > 0 && (
             <section className="mb-8">
               <h2 className="text-xl md:text-2xl font-bold text-spotify-white dark:text-light-white mb-4">Recently Played</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 lg:grid-cols-2 lg:grid-rows-4 gap-3">
-                {recentlyPlayed.slice(0, 8).map((song) => (
-                  <RecentlyPlayedCard
-                    key={song.id}
-                    song={song}
-                    onPlay={() => onPlaySong(song, recentlyPlayed)}
-                    isPlaying={song.id === currentSong?.id && isPlaying}
-                  />
-                ))}
-              </div>
+              {(() => {
+                const numSongs = recentlyPlayed.slice(0, 8).length;
+                const numRows = Math.ceil(numSongs / 2);
+                return (
+                  <div className={`grid grid-cols-2 gap-3 grid-rows-[${numRows}]`}>
+                    {recentlyPlayed.slice(0, 8).map((song) => (
+                      <RecentlyPlayedCard
+                        key={song.id}
+                        song={song}
+                        onPlay={() => onPlaySong(song, recentlyPlayed)}
+                        isPlaying={song.id === currentSong?.id && isPlaying}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </section>
           )}
 
