@@ -469,7 +469,7 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
           </div>
         </div>
         <div className="flex-shrink-0 relative z-10">
-          <img src={heroBg} alt="Hero Background" className="w-80 h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] xl:w-[32rem] xl:h-[32rem] object-cover rounded-lg" />
+          <img src={heroBg} alt="Hero Background" className="w-64 md:w-80 lg:w-96 xl:w-[28rem] h-auto object-cover rounded-lg" />
         </div>
         <div className="absolute bottom-4 left-8 flex items-center gap-3">
           <div className={`relative w-10 h-10 md:w-12 md:h-12 rounded-lg shadow-lg ${isPlaying ? 'animate-pulse' : ''}`}>
