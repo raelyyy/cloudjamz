@@ -183,7 +183,7 @@ export default function Sidebar({ onNavigate, onUpload, onCreatePlaylist, user, 
 
       {/* Desktop Sidebar */}
       {isVisible ? (
-        <aside className="w-64 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-6 overflow-y-auto hidden md:block relative">
+        <aside className="w-64 bg-spotify-dark dark:bg-light-dark border-r border-spotify-light dark:border-light-light p-6 overflow-y-auto hidden md:block relative slide-in-left">
         {/* Upload Section */}
         <div className="mb-4 mt-4">
           <button

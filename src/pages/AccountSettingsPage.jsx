@@ -26,7 +26,7 @@ export default function AccountSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [mfaFactors, setMfaFactors] = useState([]);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+63');
   const [phoneLabel, setPhoneLabel] = useState('Personal phone');
   const [smsCode, setSmsCode] = useState('');
   const [verificationId, setVerificationId] = useState('');
@@ -381,13 +381,25 @@ export default function AccountSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Phone number</label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+15555555555"
-                className="w-full px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
-              />
+              <div className="flex">
+                <span className="inline-flex items-center px-3 py-3 bg-spotify-light/20 dark:bg-light-light/20 border border-spotify-light dark:border-light-light border-r-0 rounded-l-lg text-spotify-white dark:text-light-white font-medium">
+                  +63
+                </span>
+                <input
+                  type="tel"
+                  value={phoneNumber.replace('+63', '')}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                    if (value.length <= 10) {
+                      setPhoneNumber('+63' + value);
+                    }
+                  }}
+                  placeholder="9xxxxxxxxx"
+                  maxLength={10}
+                  className="flex-1 px-4 py-3 bg-spotify-black dark:bg-light-black border border-spotify-light dark:border-light-light border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-spotify-white dark:text-light-white"
+                />
+              </div>
+              <p className="text-xs text-spotify-lighter dark:text-light-lighter mt-1">Enter your 10-digit Philippine mobile number</p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-spotify-white dark:text-light-white">Label (optional)</label>
