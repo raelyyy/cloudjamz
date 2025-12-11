@@ -14,6 +14,11 @@ import { InfiniteMovingCards } from "../components/ui/infinite-moving-cards";
 import PlayingAnimationOverlay from "../components/PlayingAnimationOverlay";
 import { Music } from "lucide-react";
 import heroBg from "../assets/hero_bg.png";
+import guitar from "../assets/guitar.png";
+import headphone from "../assets/headphone.png";
+import nota from "../assets/nota.png";
+import drums from "../assets/drums.png";
+import note from "../assets/note.png";
 
 export default function Home({ user, onPlaySong, onDelete, currentSong, isPlaying, onFavorite, favorites, onAddToPlaylist, onSetCurrentSongPaused, onUpdateCurrentSong, onEdit }) {
    const getGreeting = () => {
@@ -58,6 +63,34 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
   const [showMyMusicRight, setShowMyMusicRight] = useState(true);
   const [showPlaylistsLeft, setShowPlaylistsLeft] = useState(false);
   const [showPlaylistsRight, setShowPlaylistsRight] = useState(true);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  const heroes = [
+    {
+      bg: guitar,
+      greeting: getGreeting(),
+      title: "Welcome back,",
+      name: user ? user.displayName : 'Guest',
+      description: "Stream millions of songs, discover new artists, and create the playlist for every mood.",
+      gradient: "from-yellow-300 to-yellow-500",
+      textColor: "#001AFF",
+      bgColor: "yellow-300",
+      buttonColor: "from-red-500 to-pink-500",
+      buttonHover: "from-pink-500 to-red-500"
+    },
+    {
+      bg: heroBg,
+      greeting: "Hello there,",
+      title: "Discover new sounds,",
+      name: user ? user.displayName : 'Guest',
+      description: "Explore curated playlists, trending hits, and hidden gems from around the world.",
+      gradient: "from-purple-400 to-pink-600",
+      textColor: "#FFFFFF",
+      bgColor: "purple-400",
+      buttonColor: "from-blue-500 to-purple-600",
+      buttonHover: "from-purple-600 to-blue-500"
+    }
+  ];
 
   useEffect(() => {
     // Fetch Spotify recommendations on mount
@@ -404,97 +437,154 @@ export default function Home({ user, onPlaySong, onDelete, currentSong, isPlayin
 
   // Removed handlePlaySpotifyTrack as Spotify tracks will now play directly like uploaded music
 
+  const currentHero = heroes[currentHeroIndex];
+
   return (
     <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-spotify-black dark:bg-light-black">
-      <SpotlightCard className="hero bg-gradient-to-r from-yellow-300 to-yellow-500 px-8 rounded-lg mb-8 flex flex-col md:flex-row items-center justify-between relative" spotlightColor="rgba(255, 255, 255, 0.2)">
-        <div className="absolute -top-8 left-0 w-full z-0">
-          <CurvedLoop marqueeText="Harmony ✦ Pulse ✦ Echo ✦ Rhythm ✦ Wave ✦" curveAmount={0} />
-        </div>
-        <div className="flex-1 mb-4 md:mb-0">
-          <div className="bg-white text-[#0019FF] px-3 py-1 rounded-md font-montserrat font-semibold text-sm inline-block mb-2">
-            {getGreeting()}
+      <div className="relative mb-8">
+        <SpotlightCard className={`hero px-8 rounded-lg flex flex-col md:flex-row items-center justify-between relative overflow-hidden ${currentHeroIndex === 0 ? 'bg-yellow-400 rounded-3xl' : `bg-gradient-to-r ${currentHero.gradient}`}`} spotlightColor="rgba(255, 255, 255, 0.2)">
+          <div className="absolute -top-8 left-0 w-full z-0">
+            <CurvedLoop marqueeText="Harmony ✦ Pulse ✦ Echo ✦ Rhythm ✦ Wave ✦" curveAmount={0} />
           </div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#001AFF] mb-4 font-montserrat leading-tight">
-            Welcome back,
-          </h1>
-          <TextType
-            text={[user ? user.displayName : 'Guest'] + '!'}
-            typingSpeed={150}
-            pauseDuration={1500}
-            showCursor={true}
-            cursorCharacter="_"
-            className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#001AFF] font-montserrat leading-tight mb-4"
-          />
-          <p className="text-black text-xs md:text-sm mb-4 font-montserrat">Stream millions of songs, discover new artists, and create the playlist for every mood.</p>
-          <div className="flex gap-4 mb-4">
-            <button
-              onClick={() => {
-                if (spotifyRecommendations.length > 0) {
-                  onPlaySong(spotifyRecommendations[0], spotifyRecommendations);
-                }
-              }}
-              className="bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-l hover:from-pink-500 hover:to-red-500 text-white px-8 py-3 rounded-lg font-montserrat hover:scale-105 transition-all duration-300"
-            >
-              Play Now
-            </button>
-            <button
-              onClick={() => {
-                navigate('/liked');
-              }}
-              className="bg-black/20 text-black p-3 rounded-lg hover:scale-105 transition-all duration-300"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="#FF0039" viewBox="0 0 20 20">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'CloudJamz',
-                    text: 'Check out this awesome music app!',
-                    url: window.location.href,
-                  });
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert('Link copied to clipboard!');
-                }
-              }}
-              className="bg-black/20 text-black p-3 rounded-lg hover:scale-105 transition-all duration-300"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="#FF0039" viewBox="0 0 24 24">
+          <div className="flex-1 mb-4 md:mb-0">
+            <div className="bg-white text-[#0019FF] px-3 py-1 rounded-md font-montserrat font-semibold text-sm inline-block mb-2">
+              {currentHero.greeting}
+            </div>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 font-montserrat leading-tight" style={{ color: currentHero.textColor }}>
+              {currentHero.title}
+            </h1>
+            <TextType
+              text={[currentHero.name] + '!'}
+              typingSpeed={150}
+              pauseDuration={1500}
+              showCursor={true}
+              cursorCharacter="_"
+              className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold font-montserrat leading-tight mb-4"
+              style={{ color: currentHero.textColor }}
+            />
+            <p className="text-black text-xs md:text-sm mb-4 font-montserrat">{currentHero.description}</p>
+            <div className="flex gap-4 mb-4">
+              <button
+                onClick={() => {
+                  if (spotifyRecommendations.length > 0) {
+                    onPlaySong(spotifyRecommendations[0], spotifyRecommendations);
+                  }
+                }}
+                className={`bg-gradient-to-r ${currentHero.buttonColor} hover:bg-gradient-to-l ${currentHero.buttonHover} text-white px-8 py-3 rounded-lg font-montserrat hover:scale-105 transition-all duration-300`}
+              >
+                Play Now
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/liked');
+                }}
+                className="bg-black/20 text-black p-3 rounded-lg hover:scale-105 transition-all duration-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="#FF0039" viewBox="0 0 20 20">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'CloudJamz',
+                      text: 'Check out this awesome music app!',
+                      url: window.location.href,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }
+                }}
+                className="bg-black/20 text-black p-3 rounded-lg hover:scale-105 transition-all duration-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="#FF0039" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-            </button>
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="flex-shrink-0 relative z-10">
-          <img src={heroBg} alt="Hero Background" className="w-64 md:w-80 lg:w-96 xl:w-[28rem] h-auto object-cover rounded-lg" />
-        </div>
-        <div className="absolute bottom-4 left-8 flex items-center gap-3">
-          <div className={`relative w-10 h-10 md:w-12 md:h-12 rounded-lg shadow-lg ${isPlaying ? 'animate-pulse' : ''}`}>
-            {!imgError && (currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : null)) ? (
-              <img
-                src={currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : '/placeholder-cover.png')}
-                alt="Now Playing Cover"
-                className="w-full h-full rounded-lg object-cover"
-                onError={() => setImgError(true)}
-              />
-            ) : null}
-            {(imgError || !(currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : null))) && (
-              <div className="w-full h-full rounded-lg bg-black/20 flex items-center justify-center">
-                <Music className="w-6 h-6 md:w-8 md:h-8 text-black" />
+          {currentHeroIndex === 0 ? (
+            <div className="flex-shrink-0 relative z-10">
+              <div className="relative w-64 md:w-80 lg:w-96 xl:w-[28rem] h-auto aspect-square bg-transparent rounded-lg flex items-center justify-center">
+                <img
+                  src={headphone}
+                  alt="Headphone"
+                  className="absolute top-20 left-[-40px] w-24 h-24 opacity-80 float-animation"
+                  style={{ animationDelay: "0s" }}
+                />  
+                <img
+                  src={nota}
+                  alt="Nota"
+                  className="absolute top-12 right-14 w-24 h-24 float-animation"
+                  style={{ animationDelay: '0.5s' }}
+                />
+                <img
+                  src={drums}
+                  alt="Drums"
+                  className="absolute bottom-24 right-4 w-24 h-24 float-animation"
+                  style={{ animationDelay: '1s' }}
+                />
+                <img
+                  src={note}
+                  alt="Note"
+                  className="absolute bottom-24 left-4 w-14 h-14 opacity-80 float-animation"
+                  style={{ animationDelay: '1.5s' }}
+                />
+                <img
+                  src={guitar}
+                  alt="Guitar"
+                  className="w-62 h-62 float-animation"
+                  style={{ animationDelay: '2s' }}
+                />
               </div>
-            )}
+            </div>
+          ) : (
+            <div className="flex-shrink-0 relative z-10">
+              <img src={currentHero.bg} alt="Hero Background" className="w-64 md:w-80 lg:w-96 xl:w-[28rem] h-auto object-cover rounded-lg" />
+            </div>
+          )}
+          <div className="absolute bottom-4 left-8 flex items-center gap-3">
+            <div className={`relative w-10 h-10 md:w-12 md:h-12 rounded-lg shadow-lg ${isPlaying ? 'animate-pulse' : ''}`}>
+              {!imgError && (currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : null)) ? (
+                <img
+                  src={currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : '/placeholder-cover.png')}
+                  alt="Now Playing Cover"
+                  className="w-full h-full rounded-lg object-cover"
+                  onError={() => setImgError(true)}
+                />
+              ) : null}
+              {(imgError || !(currentSong ? currentSong.cover : (spotifyRecommendations.length > 0 ? spotifyRecommendations[0].cover : null))) && (
+                <div className="w-full h-full rounded-lg bg-black/20 flex items-center justify-center">
+                  <Music className="w-6 h-6 md:w-8 md:h-8 text-black" />
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-black text-xs font-montserrat font-semibold">Now Playing</p>
+              <p className="text-black text-xs font-montserrat font-medium">
+                {currentSong ? `${currentSong.title} by ${currentSong.artist}` : (spotifyRecommendations.length > 0 ? `${spotifyRecommendations[0].title} by ${spotifyRecommendations[0].artist}` : 'Loading...')}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-black text-xs font-montserrat font-semibold">Now Playing</p>
-            <p className="text-black text-xs font-montserrat font-medium">
-              {currentSong ? `${currentSong.title} by ${currentSong.artist}` : (spotifyRecommendations.length > 0 ? `${spotifyRecommendations[0].title} by ${spotifyRecommendations[0].artist}` : 'Loading...')}
-            </p>
-          </div>
+        </SpotlightCard>
+
+        {/* Pager */}
+        <div className="absolute bottom-4 right-4 flex gap-2 z-20">
+          {heroes.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentHeroIndex(index)}
+              className={`w-4 h-4 rounded-full transition-all duration-300 border-2 ${
+                index === currentHeroIndex
+                  ? 'bg-yellow-400 border-white scale-125'
+                  : 'bg-white/30 border-black/50 hover:bg-white/60'
+              }`}
+            />
+          ))}
         </div>
-      </SpotlightCard>
+      </div>
 
       {/* Floating 3D Card */}
       <div className="flex justify-center mb-10 mt-2">
