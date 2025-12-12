@@ -76,7 +76,7 @@ export default function PlaylistCard({ playlist, onDelete, onClick, onPlaySong, 
 
   return (
     <GlareHover background="transparent" borderColor="transparent" width="100%" height="auto" borderRadius="0.5rem" glareColor={isDarkMode ? '#DAA520' : '#F7E35A'} glareOpacity={0.3} glareAngle={-30} glareSize={300} transitionDuration={1200} playOnce={false}>
-      <div onClick={handleCardClick} className="bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 transition cursor-pointer group relative shadow-lg dark:shadow-xl">
+      <div onClick={handleCardClick} className="bg-spotify-dark dark:bg-light-dark rounded-lg p-4 hover:bg-spotify-light/20 dark:hover:bg-light-light/20 hover:scale-110 transition-all duration-300 ease-in-out cursor-pointer group relative shadow-lg dark:shadow-xl">
       <div className="relative mb-4">
         {playlist.cover ? (
           <img

@@ -18,7 +18,7 @@ export default function RecentlyPlayedCard({ song, onPlay, isPlaying }) {
   return (
     <div
       onClick={() => onPlay(song)}
-      className="flex items-center bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light/10 dark:hover:bg-light-light/10 rounded-lg p-3 transition cursor-pointer group shadow-md dark:shadow-lg"
+      className="flex items-center bg-spotify-dark dark:bg-light-dark hover:bg-spotify-light/10 dark:hover:bg-light-light/10 hover:scale-105 rounded-lg p-3 transition-all duration-300 ease-in-out cursor-pointer group shadow-md dark:shadow-lg"
     >
       {/* Cover or Placeholder */}
       <img
